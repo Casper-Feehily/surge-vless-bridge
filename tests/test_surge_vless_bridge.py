@@ -56,8 +56,8 @@ def test_parse_plain_vless_list():
 
 
 def test_name_cleanup_and_template():
-    cfg = {**BASE_CONFIG, "name_strip_patterns": [r"^JMS-\d+@"], "name_template": "Node {index} {name}"}
-    nodes = bridge.parse_nodes("vless://u@example.com:443?security=none&type=tcp#JMS-123@example.com:443", cfg)
+    cfg = {**BASE_CONFIG, "name_strip_patterns": [r"^Provider-\d+@"], "name_template": "Node {index} {name}"}
+    nodes = bridge.parse_nodes("vless://u@example.com:443?security=none&type=tcp#Provider-123@example.com:443", cfg)
     assert nodes[0].name == "Node 1 example.com:443"
 
 

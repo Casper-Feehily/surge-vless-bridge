@@ -6,7 +6,7 @@ The tool keeps Surge as the rule and policy control plane. sing-box handles the 
 
 ## Features
 
-- Supports raw VLESS subscriptions from any provider, not only JMS.
+- Supports raw VLESS subscriptions from any provider.
 - Accepts base64 subscriptions or plain text files/lists containing `vless://` links.
 - Generates one sing-box inbound/outbound pair per node.
 - Updates only marked blocks in a Surge profile.
@@ -67,7 +67,7 @@ You can normalize names in `config.json`. Strip patterns are applied to the orig
   "name_prefix": "VLESS ",
   "name_suffix": "",
   "name_template": "",
-  "name_strip_patterns": ["^JMS-\\d+@"]
+  "name_strip_patterns": ["^Provider-\\d+@"]
 }
 ```
 
@@ -151,15 +151,6 @@ The parser maps common VLESS URI parameters to sing-box:
 - Reality `pbk`/`publicKey` and `sid`/`shortId`
 - WS `host` and `path`
 - gRPC `serviceName`
-
-Legacy JMS markers are also recognized for existing installs:
-
-```ini
-# BEGIN JMS VLESS PROXIES
-# END JMS VLESS PROXIES
-# BEGIN JMS VLESS GROUP
-# END JMS VLESS GROUP
-```
 
 ## Development
 
