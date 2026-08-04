@@ -31,6 +31,20 @@ prompt_required() {
   printf "%s\n" "${value}"
 }
 
+prompt_positive_integer() {
+  local prompt="$1"
+  local default="$2"
+  local value=""
+  while true; do
+    value="$(prompt_required "${prompt}" "${default}")"
+    if [[ "${value}" =~ ^[1-9][0-9]*$ ]]; then
+      printf "%s\n" "${value}"
+      return
+    fi
+    echo "Enter a positive integer." >&2
+  done
+}
+
 detect_surge() {
   if [[ ! -x "${SURGE_CLI}" ]]; then
     echo "Surge not found: ${SURGE_CLI}" >&2
@@ -127,6 +141,12 @@ if [[ ! -f "${SURGE_PROFILE_PATH}" ]]; then
 fi
 
 SUBSCRIPTION_URL="${SUBSCRIPTION_URL:-$(prompt_required "VLESS node subscription URL")}"
+SYNC_INTERVAL_HOURS="${SYNC_INTERVAL_HOURS:-$(prompt_positive_integer "Refresh interval in hours" "1")}"
+if [[ ! "${SYNC_INTERVAL_HOURS}" =~ ^[1-9][0-9]*$ ]]; then
+  echo "SYNC_INTERVAL_HOURS must be a positive integer." >&2
+  exit 1
+fi
+SYNC_INTERVAL_SECONDS=$((SYNC_INTERVAL_HOURS * 3600))
 
 mkdir -p "${APP_DIR}/logs" "${AGENTS_DIR}"
 cp "${SRC_DIR}/surge_vless_bridge.py" "${APP_DIR}/surge_vless_bridge.py"
@@ -196,7 +216,7 @@ cat > "${AGENTS_DIR}/com.casper.surge-vless-bridge.sync.plist" <<PLIST
     <string>${APP_DIR}/config.json</string>
   </array>
   <key>StartInterval</key>
-  <integer>3600</integer>
+  <integer>${SYNC_INTERVAL_SECONDS}</integer>
   <key>RunAtLoad</key>
   <true/>
   <key>StandardOutPath</key>
@@ -219,4 +239,5 @@ launchctl bootstrap "gui/$(id -u)" "${AGENTS_DIR}/com.casper.surge-vless-bridge.
 
 echo "Done."
 echo "Config: ${APP_DIR}/config.json"
+echo "Refresh interval: every ${SYNC_INTERVAL_HOURS} hour(s)"
 echo "Surge profile markers ensured in: ${SURGE_PROFILE_PATH}"

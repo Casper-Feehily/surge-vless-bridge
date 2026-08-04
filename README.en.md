@@ -14,7 +14,7 @@ The tool keeps Surge as the rule and policy control plane. sing-box handles the 
 - Provides macOS LaunchAgent templates for sing-box keepalive and scheduled sync.
 - Uses Python standard library only.
 
-## Install
+## Quick install
 
 ```bash
 git clone https://github.com/Casper-Feehily/surge-vless-bridge.git
@@ -28,7 +28,7 @@ Or from an existing checkout:
 bash install.sh
 ```
 
-The installer:
+## What the installer does
 
 - checks that Surge for macOS is installed
 - installs `sing-box` with Homebrew when it is missing
@@ -36,16 +36,20 @@ The installer:
 - creates `[Proxy]` or `[Proxy Group]` sections when missing
 - adds the managed marker pairs to the Surge profile
 - asks for your VLESS subscription URL
+- asks how often to refresh the subscription, in hours
 - writes `~/Library/Application Support/surge-vless-bridge/config.json`
 - runs the first sync and loads the LaunchAgents
 
-For non-interactive install:
+## Non-interactive install
 
 ```bash
 SURGE_PROFILE_PATH="$HOME/Library/Application Support/Surge/Profiles/Main.conf" \
 SUBSCRIPTION_URL="https://example.com/subscription" \
+SYNC_INTERVAL_HOURS="6" \
 bash install.sh
 ```
+
+`SYNC_INTERVAL_HOURS` must be a positive integer. When omitted, the installer refreshes every 1 hour.
 
 ## Surge profile markers
 
@@ -99,9 +103,9 @@ Example:
 }
 ```
 
-## Run
+## Common commands
 
-Dry run:
+Validate without writing:
 
 ```bash
 /usr/bin/python3 "$HOME/Library/Application Support/surge-vless-bridge/surge_vless_bridge.py" \
@@ -109,14 +113,14 @@ Dry run:
   --dry-run
 ```
 
-Sync once:
+Sync once now:
 
 ```bash
 /usr/bin/python3 "$HOME/Library/Application Support/surge-vless-bridge/surge_vless_bridge.py" \
   -c "$HOME/Library/Application Support/surge-vless-bridge/config.json"
 ```
 
-Load LaunchAgents:
+Reload LaunchAgents:
 
 ```bash
 launchctl bootstrap gui/$(id -u) "$HOME/Library/LaunchAgents/com.casper.surge-vless-bridge.sing-box.plist"

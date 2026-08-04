@@ -16,7 +16,7 @@
 - 提供 macOS LaunchAgent，用于 sing-box keepalive 和定时同步。
 - 只使用 Python standard library。
 
-## 安装
+## 快速安装
 
 ```bash
 git clone https://github.com/Casper-Feehily/surge-vless-bridge.git
@@ -30,7 +30,7 @@ bash install.sh
 bash install.sh
 ```
 
-安装脚本会：
+## 安装脚本会做什么
 
 - 检查是否已安装 Surge for macOS。
 - 缺少 `sing-box` 时用 Homebrew 安装。
@@ -38,16 +38,20 @@ bash install.sh
 - 缺少 `[Proxy]` 或 `[Proxy Group]` 时自动创建。
 - 在 Surge profile 中写入托管 marker。
 - 询问 VLESS 节点订阅链接。
+- 询问订阅刷新间隔，单位是小时。
 - 写入 `~/Library/Application Support/surge-vless-bridge/config.json`。
 - 执行首次同步并加载 LaunchAgents。
 
-非交互式安装：
+## 非交互式安装
 
 ```bash
 SURGE_PROFILE_PATH="$HOME/Library/Application Support/Surge/Profiles/Main.conf" \
 SUBSCRIPTION_URL="https://example.com/subscription" \
+SYNC_INTERVAL_HOURS="6" \
 bash install.sh
 ```
+
+`SYNC_INTERVAL_HOURS` 必须是正整数。未设置时，安装脚本默认每 1 小时刷新一次订阅。
 
 ## Surge profile marker
 
@@ -101,9 +105,9 @@ vless://uuid@example.com:443?...#My%20Node
 }
 ```
 
-## 运行
+## 常用命令
 
-Dry run：
+验证配置但不写入：
 
 ```bash
 /usr/bin/python3 "$HOME/Library/Application Support/surge-vless-bridge/surge_vless_bridge.py" \
@@ -111,14 +115,14 @@ Dry run：
   --dry-run
 ```
 
-同步一次：
+立即同步一次：
 
 ```bash
 /usr/bin/python3 "$HOME/Library/Application Support/surge-vless-bridge/surge_vless_bridge.py" \
   -c "$HOME/Library/Application Support/surge-vless-bridge/config.json"
 ```
 
-加载 LaunchAgents：
+重新加载 LaunchAgents：
 
 ```bash
 launchctl bootstrap gui/$(id -u) "$HOME/Library/LaunchAgents/com.casper.surge-vless-bridge.sing-box.plist"
