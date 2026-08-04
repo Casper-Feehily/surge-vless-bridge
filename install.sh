@@ -8,12 +8,81 @@ BIN_DIR="${HOME}/.local/bin"
 SRC_DIR="$(cd "$(dirname "$0")" && pwd)"
 SING_BOX=""
 SURGE_CLI="${SURGE_CLI_PATH:-/Applications/Surge.app/Contents/Applications/surge-cli}"
+INSTALL_LANG="${INSTALL_LANG:-}"
 
 expand_path() {
   case "$1" in
     "~") printf "%s\n" "${HOME}" ;;
     "~/"*) printf "%s\n" "${HOME}/${1#"~/"}" ;;
     *) printf "%s\n" "$1" ;;
+  esac
+}
+
+choose_language() {
+  while [[ "${INSTALL_LANG}" != "zh" && "${INSTALL_LANG}" != "en" ]]; do
+    echo "Select language / 选择语言:"
+    echo "1) 中文"
+    echo "2) English"
+    read -r -p "Language [1]: " choice
+    case "${choice:-1}" in
+      1|zh|ZH|cn|CN) INSTALL_LANG="zh" ;;
+      2|en|EN) INSTALL_LANG="en" ;;
+      *) echo "Please enter 1 or 2. / 请输入 1 或 2。" >&2 ;;
+    esac
+  done
+}
+
+msg() {
+  local key="$1"
+  case "${INSTALL_LANG}:${key}" in
+    zh:surge_profile_path) printf "%s\n" "Surge profile 路径" ;;
+    zh:subscription_url) printf "%s\n" "VLESS 节点订阅链接" ;;
+    zh:refresh_interval) printf "%s\n" "订阅刷新间隔（小时）" ;;
+    zh:positive_integer) printf "%s\n" "请输入正整数。" ;;
+    zh:surge_missing) printf "未找到 Surge: %s\n" "${SURGE_CLI}" ;;
+    zh:surge_missing_hint) printf "%s\n" "请先安装 Surge for macOS，或用 SURGE_CLI_PATH=/path/to/surge-cli 指定路径。" ;;
+    zh:sing_box_no_brew) printf "%s\n" "未找到 sing-box，且未安装 Homebrew。" ;;
+    zh:sing_box_no_brew_hint) printf "%s\n" "请先安装 Homebrew 或 sing-box，然后重新运行安装脚本。" ;;
+    zh:sing_box_installing) printf "%s\n" "未找到 sing-box，正在用 Homebrew 安装..." ;;
+    zh:sing_box_missing_after_install) printf "%s\n" "sing-box 安装已结束，但仍不在 PATH 中。" ;;
+    zh:profile_not_found) printf "未找到 Surge profile: %s\n" "${SURGE_PROFILE_PATH}" ;;
+    zh:interval_invalid) printf "%s\n" "SYNC_INTERVAL_HOURS 必须是正整数。" ;;
+    zh:path_unknown_shell) printf "无法自动为当前 shell 更新 PATH: %s\n" "${SHELL:-unknown}" ;;
+    zh:path_manual_hint) printf "如需直接运行 surge-vless-sync，请手动把 %s 加入 PATH。\n" "${BIN_DIR}" ;;
+    zh:installed) printf "已安装 %s。\n" "${APP_NAME}" ;;
+    zh:first_sync) printf "%s\n" "正在执行首次同步..." ;;
+    zh:loading_agents) printf "%s\n" "正在加载 LaunchAgents..." ;;
+    zh:done) printf "%s\n" "完成。" ;;
+    zh:config) printf "配置文件: %s\n" "${APP_DIR}/config.json" ;;
+    zh:sync_command) printf "%s\n" "同步命令: surge-vless-sync" ;;
+    zh:restart_terminal) printf "%s\n" "重启终端后即可使用这个短命令。" ;;
+    zh:refresh_result) printf "刷新间隔: 每 %s 小时\n" "${SYNC_INTERVAL_HOURS}" ;;
+    zh:markers_done) printf "Surge profile marker 已写入: %s\n" "${SURGE_PROFILE_PATH}" ;;
+    *) case "${key}" in
+      surge_profile_path) printf "%s\n" "Surge profile path" ;;
+      subscription_url) printf "%s\n" "VLESS node subscription URL" ;;
+      refresh_interval) printf "%s\n" "Refresh interval in hours" ;;
+      positive_integer) printf "%s\n" "Enter a positive integer." ;;
+      surge_missing) printf "Surge not found: %s\n" "${SURGE_CLI}" ;;
+      surge_missing_hint) printf "%s\n" "Install Surge for macOS first, or run with SURGE_CLI_PATH=/path/to/surge-cli." ;;
+      sing_box_no_brew) printf "%s\n" "sing-box not found and Homebrew is not installed." ;;
+      sing_box_no_brew_hint) printf "%s\n" "Install Homebrew or sing-box first, then rerun this script." ;;
+      sing_box_installing) printf "%s\n" "sing-box not found; installing with Homebrew..." ;;
+      sing_box_missing_after_install) printf "%s\n" "sing-box installation finished, but sing-box is still not on PATH." ;;
+      profile_not_found) printf "Surge profile not found: %s\n" "${SURGE_PROFILE_PATH}" ;;
+      interval_invalid) printf "%s\n" "SYNC_INTERVAL_HOURS must be a positive integer." ;;
+      path_unknown_shell) printf "Could not update PATH automatically for shell: %s\n" "${SHELL:-unknown}" ;;
+      path_manual_hint) printf "Add %s to PATH if you want to run surge-vless-sync without the full path.\n" "${BIN_DIR}" ;;
+      installed) printf "Installed %s.\n" "${APP_NAME}" ;;
+      first_sync) printf "%s\n" "Running first sync..." ;;
+      loading_agents) printf "%s\n" "Loading LaunchAgents..." ;;
+      done) printf "%s\n" "Done." ;;
+      config) printf "Config: %s\n" "${APP_DIR}/config.json" ;;
+      sync_command) printf "%s\n" "Sync command: surge-vless-sync" ;;
+      restart_terminal) printf "%s\n" "Restart your terminal before using the short sync command." ;;
+      refresh_result) printf "Refresh interval: every %s hour(s)\n" "${SYNC_INTERVAL_HOURS}" ;;
+      markers_done) printf "Surge profile markers ensured in: %s\n" "${SURGE_PROFILE_PATH}" ;;
+    esac ;;
   esac
 }
 
@@ -42,14 +111,14 @@ prompt_positive_integer() {
       printf "%s\n" "${value}"
       return
     fi
-    echo "Enter a positive integer." >&2
+    msg positive_integer >&2
   done
 }
 
 detect_surge() {
   if [[ ! -x "${SURGE_CLI}" ]]; then
-    echo "Surge not found: ${SURGE_CLI}" >&2
-    echo "Install Surge for macOS first, or run with SURGE_CLI_PATH=/path/to/surge-cli." >&2
+    msg surge_missing >&2
+    msg surge_missing_hint >&2
     exit 1
   fi
 }
@@ -65,17 +134,17 @@ detect_or_install_sing_box() {
 
   if [[ -z "${SING_BOX}" ]]; then
     if ! command -v brew >/dev/null 2>&1; then
-      echo "sing-box not found and Homebrew is not installed." >&2
-      echo "Install Homebrew or sing-box first, then rerun this script." >&2
+      msg sing_box_no_brew >&2
+      msg sing_box_no_brew_hint >&2
       exit 1
     fi
-    echo "sing-box not found; installing with Homebrew..."
+    msg sing_box_installing
     brew install sing-box
     SING_BOX="$(command -v sing-box || true)"
   fi
 
   if [[ -z "${SING_BOX}" ]]; then
-    echo "sing-box installation finished, but sing-box is still not on PATH." >&2
+    msg sing_box_missing_after_install >&2
     exit 1
   fi
 }
@@ -152,25 +221,26 @@ ensure_path() {
       grep -Fq 'fish_add_path -g "$HOME/.local/bin"' "${HOME}/.config/fish/config.fish" || printf "\n# surge-vless-bridge\nfish_add_path -g \"\$HOME/.local/bin\"\n" >> "${HOME}/.config/fish/config.fish"
       ;;
     *)
-      echo "Could not update PATH automatically for shell: ${SHELL:-unknown}" >&2
-      echo "Add ${BIN_DIR} to PATH if you want to run surge-vless-sync without the full path." >&2
+      msg path_unknown_shell >&2
+      msg path_manual_hint >&2
       ;;
   esac
 }
 
+choose_language
 detect_surge
 detect_or_install_sing_box
 
-SURGE_PROFILE_PATH="$(expand_path "${SURGE_PROFILE_PATH:-$(prompt_required "Surge profile path")}")"
+SURGE_PROFILE_PATH="$(expand_path "${SURGE_PROFILE_PATH:-$(prompt_required "$(msg surge_profile_path)")}")"
 if [[ ! -f "${SURGE_PROFILE_PATH}" ]]; then
-  echo "Surge profile not found: ${SURGE_PROFILE_PATH}" >&2
+  msg profile_not_found >&2
   exit 1
 fi
 
-SUBSCRIPTION_URL="${SUBSCRIPTION_URL:-$(prompt_required "VLESS node subscription URL")}"
-SYNC_INTERVAL_HOURS="${SYNC_INTERVAL_HOURS:-$(prompt_positive_integer "Refresh interval in hours" "1")}"
+SUBSCRIPTION_URL="${SUBSCRIPTION_URL:-$(prompt_required "$(msg subscription_url)")}"
+SYNC_INTERVAL_HOURS="${SYNC_INTERVAL_HOURS:-$(prompt_positive_integer "$(msg refresh_interval)" "1")}"
 if [[ ! "${SYNC_INTERVAL_HOURS}" =~ ^[1-9][0-9]*$ ]]; then
-  echo "SYNC_INTERVAL_HOURS must be a positive integer." >&2
+  msg interval_invalid >&2
   exit 1
 fi
 SYNC_INTERVAL_SECONDS=$((SYNC_INTERVAL_HOURS * 3600))
@@ -281,20 +351,20 @@ SH
 chmod +x "${BIN_DIR}/surge-vless-sync"
 ensure_path
 
-echo "Installed ${APP_NAME}."
-echo "Running first sync..."
+msg installed
+msg first_sync
 /usr/bin/python3 "${APP_DIR}/surge_vless_bridge.py" -c "${INSTALL_CONFIG}"
 rm -f "${INSTALL_CONFIG}"
 
-echo "Loading LaunchAgents..."
+msg loading_agents
 launchctl bootout "gui/$(id -u)" "${AGENTS_DIR}/com.casper.surge-vless-bridge.sing-box.plist" >/dev/null 2>&1 || true
 launchctl bootout "gui/$(id -u)" "${AGENTS_DIR}/com.casper.surge-vless-bridge.sync.plist" >/dev/null 2>&1 || true
 launchctl bootstrap "gui/$(id -u)" "${AGENTS_DIR}/com.casper.surge-vless-bridge.sing-box.plist"
 launchctl bootstrap "gui/$(id -u)" "${AGENTS_DIR}/com.casper.surge-vless-bridge.sync.plist"
 
-echo "Done."
-echo "Config: ${APP_DIR}/config.json"
-echo "Sync command: surge-vless-sync"
-echo "Restart your terminal before using the short sync command."
-echo "Refresh interval: every ${SYNC_INTERVAL_HOURS} hour(s)"
-echo "Surge profile markers ensured in: ${SURGE_PROFILE_PATH}"
+msg done
+msg config
+msg sync_command
+msg restart_terminal
+msg refresh_result
+msg markers_done

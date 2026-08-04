@@ -32,6 +32,7 @@ bash install.sh
 
 ## 安装脚本会做什么
 
+- 首先选择安装语言：中文或 English。
 - 检查是否已安装 Surge for macOS。
 - 缺少 `sing-box` 时用 Homebrew 安装。
 - 询问 Surge profile 路径。
@@ -48,10 +49,11 @@ bash install.sh
 SURGE_PROFILE_PATH="$HOME/Library/Application Support/Surge/Profiles/Main.conf" \
 SUBSCRIPTION_URL="https://example.com/subscription" \
 SYNC_INTERVAL_HOURS="6" \
+INSTALL_LANG="zh" \
 bash install.sh
 ```
 
-`SYNC_INTERVAL_HOURS` 必须是正整数。未设置时，安装脚本默认每 1 小时刷新一次订阅。
+`SYNC_INTERVAL_HOURS` 必须是正整数。未设置时，安装脚本默认每 1 小时刷新一次订阅。`INSTALL_LANG` 可设为 `zh` 或 `en`，用于跳过语言选择。
 
 ## Surge profile marker
 

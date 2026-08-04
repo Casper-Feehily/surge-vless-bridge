@@ -30,6 +30,7 @@ bash install.sh
 
 ## What the installer does
 
+- first asks you to choose the installer language: 中文 or English
 - checks that Surge for macOS is installed
 - installs `sing-box` with Homebrew when it is missing
 - asks for your Surge profile path
@@ -46,10 +47,11 @@ bash install.sh
 SURGE_PROFILE_PATH="$HOME/Library/Application Support/Surge/Profiles/Main.conf" \
 SUBSCRIPTION_URL="https://example.com/subscription" \
 SYNC_INTERVAL_HOURS="6" \
+INSTALL_LANG="en" \
 bash install.sh
 ```
 
-`SYNC_INTERVAL_HOURS` must be a positive integer. When omitted, the installer refreshes every 1 hour.
+`SYNC_INTERVAL_HOURS` must be a positive integer. When omitted, the installer refreshes every 1 hour. Set `INSTALL_LANG` to `zh` or `en` to skip the language prompt.
 
 ## Surge profile markers
 
