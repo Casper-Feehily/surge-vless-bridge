@@ -175,6 +175,19 @@ PY
 
 write_profile_markers "${SURGE_PROFILE_PATH}"
 
+INSTALL_CONFIG="${APP_DIR}/config.install.json"
+/usr/bin/python3 - <<'PY'
+import json
+import os
+from pathlib import Path
+
+source = Path(os.environ["APP_DIR"]) / "config.json"
+target = Path(os.environ["APP_DIR"]) / "config.install.json"
+data = json.loads(source.read_text())
+data["restart_sing_box"] = False
+target.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n")
+PY
+
 cat > "${AGENTS_DIR}/com.casper.surge-vless-bridge.sing-box.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -229,7 +242,8 @@ PLIST
 
 echo "Installed ${APP_NAME}."
 echo "Running first sync..."
-/usr/bin/python3 "${APP_DIR}/surge_vless_bridge.py" -c "${APP_DIR}/config.json"
+/usr/bin/python3 "${APP_DIR}/surge_vless_bridge.py" -c "${INSTALL_CONFIG}"
+rm -f "${INSTALL_CONFIG}"
 
 echo "Loading LaunchAgents..."
 launchctl bootout "gui/$(id -u)" "${AGENTS_DIR}/com.casper.surge-vless-bridge.sing-box.plist" >/dev/null 2>&1 || true
