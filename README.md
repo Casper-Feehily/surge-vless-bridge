@@ -118,9 +118,10 @@ vless://uuid@example.com:443?...#My%20Node
 立即同步一次：
 
 ```bash
-/usr/bin/python3 "$HOME/Library/Application Support/surge-vless-bridge/surge_vless_bridge.py" \
-  -c "$HOME/Library/Application Support/surge-vless-bridge/config.json"
+surge-vless-sync
 ```
+
+安装脚本会按当前 shell 把 `~/.local/bin` 加到启动配置：zsh 写入 `~/.zshrc`，bash 写入 `~/.bashrc` 和 `~/.bash_profile`，fish 写入 `~/.config/fish/config.fish`。安装后重开终端即可直接使用短命令。
 
 重新加载 LaunchAgents：
 
@@ -132,7 +133,7 @@ launchctl bootstrap gui/$(id -u) "$HOME/Library/LaunchAgents/com.casper.surge-vl
 立即触发同步：
 
 ```bash
-launchctl kickstart -k gui/$(id -u)/com.casper.surge-vless-bridge.sync
+surge-vless-sync
 ```
 
 检查 sing-box：

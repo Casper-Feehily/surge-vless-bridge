@@ -4,6 +4,7 @@ set -euo pipefail
 APP_NAME="surge-vless-bridge"
 APP_DIR="${HOME}/Library/Application Support/${APP_NAME}"
 AGENTS_DIR="${HOME}/Library/LaunchAgents"
+BIN_DIR="${HOME}/.local/bin"
 SRC_DIR="$(cd "$(dirname "$0")" && pwd)"
 SING_BOX=""
 SURGE_CLI="${SURGE_CLI_PATH:-/Applications/Surge.app/Contents/Applications/surge-cli}"
@@ -131,6 +132,32 @@ if updated != text:
 PY
 }
 
+ensure_path() {
+  local shell_name
+  local path_line='export PATH="$HOME/.local/bin:$PATH"'
+  shell_name="$(basename "${SHELL:-}")"
+  case "${shell_name}" in
+    zsh)
+      touch "${HOME}/.zshrc"
+      grep -Fq "${path_line}" "${HOME}/.zshrc" || printf "\n# surge-vless-bridge\n%s\n" "${path_line}" >> "${HOME}/.zshrc"
+      ;;
+    bash)
+      touch "${HOME}/.bashrc" "${HOME}/.bash_profile"
+      grep -Fq "${path_line}" "${HOME}/.bashrc" || printf "\n# surge-vless-bridge\n%s\n" "${path_line}" >> "${HOME}/.bashrc"
+      grep -Fq "${path_line}" "${HOME}/.bash_profile" || printf "\n# surge-vless-bridge\n%s\n" "${path_line}" >> "${HOME}/.bash_profile"
+      ;;
+    fish)
+      mkdir -p "${HOME}/.config/fish"
+      touch "${HOME}/.config/fish/config.fish"
+      grep -Fq 'fish_add_path -g "$HOME/.local/bin"' "${HOME}/.config/fish/config.fish" || printf "\n# surge-vless-bridge\nfish_add_path -g \"\$HOME/.local/bin\"\n" >> "${HOME}/.config/fish/config.fish"
+      ;;
+    *)
+      echo "Could not update PATH automatically for shell: ${SHELL:-unknown}" >&2
+      echo "Add ${BIN_DIR} to PATH if you want to run surge-vless-sync without the full path." >&2
+      ;;
+  esac
+}
+
 detect_surge
 detect_or_install_sing_box
 
@@ -148,7 +175,7 @@ if [[ ! "${SYNC_INTERVAL_HOURS}" =~ ^[1-9][0-9]*$ ]]; then
 fi
 SYNC_INTERVAL_SECONDS=$((SYNC_INTERVAL_HOURS * 3600))
 
-mkdir -p "${APP_DIR}/logs" "${AGENTS_DIR}"
+mkdir -p "${APP_DIR}/logs" "${AGENTS_DIR}" "${BIN_DIR}"
 cp "${SRC_DIR}/surge_vless_bridge.py" "${APP_DIR}/surge_vless_bridge.py"
 chmod +x "${APP_DIR}/surge_vless_bridge.py"
 
@@ -240,6 +267,20 @@ cat > "${AGENTS_DIR}/com.casper.surge-vless-bridge.sync.plist" <<PLIST
 </plist>
 PLIST
 
+cat > "${BIN_DIR}/surge-vless-sync" <<SH
+#!/usr/bin/env bash
+set -euo pipefail
+LABEL="com.casper.surge-vless-bridge.sync"
+CONFIG="${APP_DIR}/config.json"
+if launchctl kickstart -k "gui/\$(id -u)/\${LABEL}" >/dev/null 2>&1; then
+  echo "Sync triggered through LaunchAgent."
+else
+  /usr/bin/python3 "${APP_DIR}/surge_vless_bridge.py" -c "\${CONFIG}"
+fi
+SH
+chmod +x "${BIN_DIR}/surge-vless-sync"
+ensure_path
+
 echo "Installed ${APP_NAME}."
 echo "Running first sync..."
 /usr/bin/python3 "${APP_DIR}/surge_vless_bridge.py" -c "${INSTALL_CONFIG}"
@@ -253,5 +294,7 @@ launchctl bootstrap "gui/$(id -u)" "${AGENTS_DIR}/com.casper.surge-vless-bridge.
 
 echo "Done."
 echo "Config: ${APP_DIR}/config.json"
+echo "Sync command: surge-vless-sync"
+echo "Restart your terminal before using the short sync command."
 echo "Refresh interval: every ${SYNC_INTERVAL_HOURS} hour(s)"
 echo "Surge profile markers ensured in: ${SURGE_PROFILE_PATH}"

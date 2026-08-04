@@ -116,9 +116,10 @@ Validate without writing:
 Sync once now:
 
 ```bash
-/usr/bin/python3 "$HOME/Library/Application Support/surge-vless-bridge/surge_vless_bridge.py" \
-  -c "$HOME/Library/Application Support/surge-vless-bridge/config.json"
+surge-vless-sync
 ```
+
+The installer adds `~/.local/bin` to the current shell startup file: `~/.zshrc` for zsh, `~/.bashrc` and `~/.bash_profile` for bash, or `~/.config/fish/config.fish` for fish. Restart the terminal after install to use the short command directly.
 
 Reload LaunchAgents:
 
@@ -130,7 +131,7 @@ launchctl bootstrap gui/$(id -u) "$HOME/Library/LaunchAgents/com.casper.surge-vl
 Trigger sync now:
 
 ```bash
-launchctl kickstart -k gui/$(id -u)/com.casper.surge-vless-bridge.sync
+surge-vless-sync
 ```
 
 Check sing-box:
