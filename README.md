@@ -17,22 +17,35 @@ The tool keeps Surge as the rule and policy control plane. sing-box handles the 
 ## Install
 
 ```bash
-brew install sing-box
-git clone https://github.com/YOUR_NAME/surge-vless-bridge.git
+git clone https://github.com/Casper-Feehily/surge-vless-bridge.git
 cd surge-vless-bridge
 bash install.sh
 ```
 
-Edit:
+Or from an existing checkout:
 
 ```bash
-open "$HOME/Library/Application Support/surge-vless-bridge/config.json"
+bash install.sh
 ```
 
-Set at least:
+The installer:
 
-- `subscription_url`: HTTP(S), `file://`, or local path. Content may be base64 or plain `vless://` links.
-- `surge_profile_path`: absolute path to your Surge profile.
+- checks that Surge for macOS is installed
+- installs `sing-box` with Homebrew when it is missing
+- asks for your Surge profile path
+- creates `[Proxy]` or `[Proxy Group]` sections when missing
+- adds the managed marker pairs to the Surge profile
+- asks for your VLESS subscription URL
+- writes `~/Library/Application Support/surge-vless-bridge/config.json`
+- runs the first sync and loads the LaunchAgents
+
+For non-interactive install:
+
+```bash
+SURGE_PROFILE_PATH="$HOME/Library/Application Support/Surge/Profiles/Main.conf" \
+SUBSCRIPTION_URL="https://example.com/subscription" \
+bash install.sh
+```
 
 ## Surge profile markers
 
