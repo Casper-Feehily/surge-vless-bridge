@@ -38,7 +38,7 @@ msg() {
     zh:surge_profile_path) printf "%s\n" "Surge profile 路径" ;;
     zh:subscription_url) printf "%s\n" "VLESS 节点订阅链接" ;;
     zh:refresh_interval) printf "%s\n" "订阅刷新间隔（小时）" ;;
-    zh:positive_integer) printf "%s\n" "请输入正整数。" ;;
+    zh:positive_number) printf "%s\n" "请输入正数，例如 1 或 0.5。" ;;
     zh:surge_missing) printf "未找到 Surge: %s\n" "${SURGE_CLI}" ;;
     zh:surge_missing_hint) printf "%s\n" "请先安装 Surge for macOS，或用 SURGE_CLI_PATH=/path/to/surge-cli 指定路径。" ;;
     zh:sing_box_no_brew) printf "%s\n" "未找到 sing-box，且未安装 Homebrew。" ;;
@@ -46,7 +46,7 @@ msg() {
     zh:sing_box_installing) printf "%s\n" "未找到 sing-box，正在用 Homebrew 安装..." ;;
     zh:sing_box_missing_after_install) printf "%s\n" "sing-box 安装已结束，但仍不在 PATH 中。" ;;
     zh:profile_not_found) printf "未找到 Surge profile: %s\n" "${SURGE_PROFILE_PATH}" ;;
-    zh:interval_invalid) printf "%s\n" "SYNC_INTERVAL_HOURS 必须是正整数。" ;;
+    zh:interval_invalid) printf "%s\n" "SYNC_INTERVAL_HOURS 必须是正数，例如 1 或 0.5。" ;;
     zh:path_unknown_shell) printf "无法自动为当前 shell 更新 PATH: %s\n" "${SHELL:-unknown}" ;;
     zh:path_manual_hint) printf "如需直接运行 surge-vless-sync，请手动把 %s 加入 PATH。\n" "${BIN_DIR}" ;;
     zh:installed) printf "已安装 %s。\n" "${APP_NAME}" ;;
@@ -62,7 +62,7 @@ msg() {
       surge_profile_path) printf "%s\n" "Surge profile path" ;;
       subscription_url) printf "%s\n" "VLESS node subscription URL" ;;
       refresh_interval) printf "%s\n" "Refresh interval in hours" ;;
-      positive_integer) printf "%s\n" "Enter a positive integer." ;;
+      positive_number) printf "%s\n" "Enter a positive number, for example 1 or 0.5." ;;
       surge_missing) printf "Surge not found: %s\n" "${SURGE_CLI}" ;;
       surge_missing_hint) printf "%s\n" "Install Surge for macOS first, or run with SURGE_CLI_PATH=/path/to/surge-cli." ;;
       sing_box_no_brew) printf "%s\n" "sing-box not found and Homebrew is not installed." ;;
@@ -70,7 +70,7 @@ msg() {
       sing_box_installing) printf "%s\n" "sing-box not found; installing with Homebrew..." ;;
       sing_box_missing_after_install) printf "%s\n" "sing-box installation finished, but sing-box is still not on PATH." ;;
       profile_not_found) printf "Surge profile not found: %s\n" "${SURGE_PROFILE_PATH}" ;;
-      interval_invalid) printf "%s\n" "SYNC_INTERVAL_HOURS must be a positive integer." ;;
+      interval_invalid) printf "%s\n" "SYNC_INTERVAL_HOURS must be a positive number, for example 1 or 0.5." ;;
       path_unknown_shell) printf "Could not update PATH automatically for shell: %s\n" "${SHELL:-unknown}" ;;
       path_manual_hint) printf "Add %s to PATH if you want to run surge-vless-sync without the full path.\n" "${BIN_DIR}" ;;
       installed) printf "Installed %s.\n" "${APP_NAME}" ;;
@@ -101,17 +101,17 @@ prompt_required() {
   printf "%s\n" "${value}"
 }
 
-prompt_positive_integer() {
+prompt_positive_number() {
   local prompt="$1"
   local default="$2"
   local value=""
   while true; do
     value="$(prompt_required "${prompt}" "${default}")"
-    if [[ "${value}" =~ ^[1-9][0-9]*$ ]]; then
+    if [[ "${value}" =~ ^([0-9]+([.][0-9]+)?|[.][0-9]+)$ ]] && /usr/bin/python3 -c 'import sys; raise SystemExit(not (float(sys.argv[1]) > 0))' "${value}"; then
       printf "%s\n" "${value}"
       return
     fi
-    msg positive_integer >&2
+    msg positive_number >&2
   done
 }
 
@@ -238,12 +238,12 @@ if [[ ! -f "${SURGE_PROFILE_PATH}" ]]; then
 fi
 
 SUBSCRIPTION_URL="${SUBSCRIPTION_URL:-$(prompt_required "$(msg subscription_url)")}"
-SYNC_INTERVAL_HOURS="${SYNC_INTERVAL_HOURS:-$(prompt_positive_integer "$(msg refresh_interval)" "1")}"
-if [[ ! "${SYNC_INTERVAL_HOURS}" =~ ^[1-9][0-9]*$ ]]; then
+SYNC_INTERVAL_HOURS="${SYNC_INTERVAL_HOURS:-$(prompt_positive_number "$(msg refresh_interval)" "1")}"
+if ! [[ "${SYNC_INTERVAL_HOURS}" =~ ^([0-9]+([.][0-9]+)?|[.][0-9]+)$ ]] || ! /usr/bin/python3 -c 'import sys; raise SystemExit(not (float(sys.argv[1]) > 0))' "${SYNC_INTERVAL_HOURS}"; then
   msg interval_invalid >&2
   exit 1
 fi
-SYNC_INTERVAL_SECONDS=$((SYNC_INTERVAL_HOURS * 3600))
+SYNC_INTERVAL_SECONDS="$(/usr/bin/python3 -c 'import math, sys; print(max(1, math.ceil(float(sys.argv[1]) * 3600)))' "${SYNC_INTERVAL_HOURS}")"
 
 mkdir -p "${APP_DIR}/logs" "${AGENTS_DIR}" "${BIN_DIR}"
 cp "${SRC_DIR}/surge_vless_bridge.py" "${APP_DIR}/surge_vless_bridge.py"

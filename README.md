@@ -53,7 +53,7 @@ INSTALL_LANG="zh" \
 bash install.sh
 ```
 
-`SYNC_INTERVAL_HOURS` 必须是正整数。未设置时，安装脚本默认每 1 小时刷新一次订阅。`INSTALL_LANG` 可设为 `zh` 或 `en`，用于跳过语言选择。
+`SYNC_INTERVAL_HOURS` 必须是正数，支持小数，例如 `0.5` 表示 30 分钟。未设置时，安装脚本默认每 1 小时刷新一次订阅。`INSTALL_LANG` 可设为 `zh` 或 `en`，用于跳过语言选择。
 
 ## Surge profile marker
 

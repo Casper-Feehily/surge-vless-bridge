@@ -51,7 +51,7 @@ INSTALL_LANG="en" \
 bash install.sh
 ```
 
-`SYNC_INTERVAL_HOURS` must be a positive integer. When omitted, the installer refreshes every 1 hour. Set `INSTALL_LANG` to `zh` or `en` to skip the language prompt.
+`SYNC_INTERVAL_HOURS` must be a positive number and may be decimal, for example `0.5` for 30 minutes. When omitted, the installer refreshes every 1 hour. Set `INSTALL_LANG` to `zh` or `en` to skip the language prompt.
 
 ## Surge profile markers
 
