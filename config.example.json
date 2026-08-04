@@ -1,0 +1,22 @@
+{
+  "subscription_url": "https://example.com/subscription-or-/path/to/plain-vless.txt",
+  "surge_profile_path": "/Users/you/Library/Application Support/Surge/Profiles/Main.conf",
+  "sing_box_config_path": "/Users/you/Library/Application Support/surge-vless-bridge/sing-box.generated.json",
+  "listen_host": "127.0.0.1",
+  "start_port": 39000,
+  "group_name": "VLESS",
+  "group_type": "select",
+  "proxy_marker_begin": "# BEGIN SURGE VLESS BRIDGE PROXIES",
+  "proxy_marker_end": "# END SURGE VLESS BRIDGE PROXIES",
+  "group_marker_begin": "# BEGIN SURGE VLESS BRIDGE GROUP",
+  "group_marker_end": "# END SURGE VLESS BRIDGE GROUP",
+  "name_prefix": "",
+  "name_suffix": "",
+  "name_template": "",
+  "name_strip_patterns": [],
+  "sing_box_path": "/opt/homebrew/bin/sing-box",
+  "surge_cli_path": "/Applications/Surge.app/Contents/Applications/surge-cli",
+  "check_port_conflicts": false,
+  "restart_sing_box": true,
+  "reload_surge": true
+}

@@ -1,0 +1,11 @@
+[project]
+name = "surge-vless-bridge"
+version = "0.1.0"
+description = "Sync VLESS subscriptions into Surge for macOS through local sing-box SOCKS5 ports."
+readme = "README.md"
+requires-python = ">=3.9"
+license = "MIT"
+authors = [{ name = "Casper" }]
+
+[project.scripts]
+surge-vless-bridge = "surge_vless_bridge:main"

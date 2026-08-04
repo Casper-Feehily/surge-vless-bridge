@@ -1,0 +1,2 @@
+vless://uuid@example.com:443?security=reality&sni=www.example.com&fp=chrome&pbk=public-key&sid=short-id&type=tcp&flow=xtls-rprx-vision#Reality%20Node
+vless://uuid2@ws.example.com:443?security=tls&type=ws&sni=ws.example.com&host=cdn.example.com&path=%2Fws#WebSocket%20Node

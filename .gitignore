@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.DS_Store
+.idea/
+logs/
+state.json
+sing-box.generated.json
+config.json

@@ -1,0 +1,170 @@
+# surge-vless-bridge
+
+Use VLESS, including Reality, from Surge for macOS without modifying Surge.
+
+The tool keeps Surge as the rule and policy control plane. sing-box handles the VLESS data plane locally. Each VLESS node becomes one local SOCKS5 port, and Surge sees those ports as normal `socks5` proxies.
+
+## Features
+
+- Supports raw VLESS subscriptions from any provider, not only JMS.
+- Accepts base64 subscriptions or plain text files/lists containing `vless://` links.
+- Generates one sing-box inbound/outbound pair per node.
+- Updates only marked blocks in a Surge profile.
+- Keeps old working config on fetch, parse, sing-box check, or Surge profile check failure.
+- Provides macOS LaunchAgent templates for sing-box keepalive and scheduled sync.
+- Uses Python standard library only.
+
+## Install
+
+```bash
+brew install sing-box
+git clone https://github.com/YOUR_NAME/surge-vless-bridge.git
+cd surge-vless-bridge
+bash install.sh
+```
+
+Edit:
+
+```bash
+open "$HOME/Library/Application Support/surge-vless-bridge/config.json"
+```
+
+Set at least:
+
+- `subscription_url`: HTTP(S), `file://`, or local path. Content may be base64 or plain `vless://` links.
+- `surge_profile_path`: absolute path to your Surge profile.
+
+## Surge profile markers
+
+Add these markers inside `[Proxy]`:
+
+```ini
+# BEGIN SURGE VLESS BRIDGE PROXIES
+# END SURGE VLESS BRIDGE PROXIES
+```
+
+Add these markers inside `[Proxy Group]`:
+
+```ini
+# BEGIN SURGE VLESS BRIDGE GROUP
+# END SURGE VLESS BRIDGE GROUP
+```
+
+Only content between those marker pairs is replaced.
+
+## Node names
+
+By default, node names come from the URI fragment:
+
+```text
+vless://uuid@example.com:443?...#My%20Node
+```
+
+You can normalize names in `config.json`. Strip patterns are applied to the original subscription name before prefix/suffix or template formatting.
+
+```json
+{
+  "name_prefix": "VLESS ",
+  "name_suffix": "",
+  "name_template": "",
+  "name_strip_patterns": ["^JMS-\\d+@"]
+}
+```
+
+`name_template` overrides prefix/suffix when set. Available fields:
+
+- `{index}`
+- `{name}`
+- `{server}`
+- `{port}`
+
+Example:
+
+```json
+{
+  "name_template": "VLESS {index} {server}"
+}
+```
+
+## Run
+
+Dry run:
+
+```bash
+/usr/bin/python3 "$HOME/Library/Application Support/surge-vless-bridge/surge_vless_bridge.py" \
+  -c "$HOME/Library/Application Support/surge-vless-bridge/config.json" \
+  --dry-run
+```
+
+Sync once:
+
+```bash
+/usr/bin/python3 "$HOME/Library/Application Support/surge-vless-bridge/surge_vless_bridge.py" \
+  -c "$HOME/Library/Application Support/surge-vless-bridge/config.json"
+```
+
+Load LaunchAgents:
+
+```bash
+launchctl bootstrap gui/$(id -u) "$HOME/Library/LaunchAgents/com.casper.surge-vless-bridge.sing-box.plist"
+launchctl bootstrap gui/$(id -u) "$HOME/Library/LaunchAgents/com.casper.surge-vless-bridge.sync.plist"
+```
+
+Trigger sync now:
+
+```bash
+launchctl kickstart -k gui/$(id -u)/com.casper.surge-vless-bridge.sync
+```
+
+Check sing-box:
+
+```bash
+launchctl print gui/$(id -u)/com.casper.surge-vless-bridge.sing-box
+curl --socks5-hostname 127.0.0.1:39000 https://www.gstatic.com/generate_204 -I
+```
+
+## Surge usage
+
+The generated group defaults to:
+
+```ini
+VLESS = select, ...
+```
+
+Point normal Surge rules to `VLESS`:
+
+```ini
+DOMAIN-SUFFIX,example.com,VLESS
+FINAL,DIRECT
+```
+
+Surge still owns rule matching, policy groups, Dashboard, and reload. sing-box owns the VLESS/Reality connection.
+
+## Compatibility
+
+The parser maps common VLESS URI parameters to sing-box:
+
+- `security=none|tls|reality`
+- `type=tcp|ws|grpc|http|h2|httpupgrade|quic`
+- `flow=xtls-rprx-vision`
+- `sni`, `fp`, `alpn`, `allowInsecure`
+- Reality `pbk`/`publicKey` and `sid`/`shortId`
+- WS `host` and `path`
+- gRPC `serviceName`
+
+Legacy JMS markers are also recognized for existing installs:
+
+```ini
+# BEGIN JMS VLESS PROXIES
+# END JMS VLESS PROXIES
+# BEGIN JMS VLESS GROUP
+# END JMS VLESS GROUP
+```
+
+## Development
+
+```bash
+/usr/bin/python3 tests/test_surge_vless_bridge.py
+/usr/bin/python3 -m py_compile surge_vless_bridge.py tests/test_surge_vless_bridge.py
+bash -n install.sh
+```
