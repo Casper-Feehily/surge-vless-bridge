@@ -25,12 +25,6 @@ DEFAULT_PROXY_END = "# END SURGE VLESS BRIDGE PROXIES"
 DEFAULT_GROUP_BEGIN = "# BEGIN SURGE VLESS BRIDGE GROUP"
 DEFAULT_GROUP_END = "# END SURGE VLESS BRIDGE GROUP"
 
-LEGACY_PROXY_BEGIN = "# BEGIN JMS VLESS PROXIES"
-LEGACY_PROXY_END = "# END JMS VLESS PROXIES"
-LEGACY_GROUP_BEGIN = "# BEGIN JMS VLESS GROUP"
-LEGACY_GROUP_END = "# END JMS VLESS GROUP"
-
-
 @dataclass(frozen=True)
 class Node:
     name: str
@@ -330,16 +324,8 @@ def build_surge_blocks(nodes: list[Node], config: dict) -> tuple[str, str]:
 
 def marker_pair(config: dict, kind: str, profile_text: str) -> tuple[str, str]:
     if kind == "proxy":
-        configured = (config["proxy_marker_begin"], config["proxy_marker_end"])
-        legacy = (LEGACY_PROXY_BEGIN, LEGACY_PROXY_END)
-    else:
-        configured = (config["group_marker_begin"], config["group_marker_end"])
-        legacy = (LEGACY_GROUP_BEGIN, LEGACY_GROUP_END)
-    if configured[0] in profile_text and configured[1] in profile_text:
-        return configured
-    if legacy[0] in profile_text and legacy[1] in profile_text:
-        return legacy
-    return configured
+        return config["proxy_marker_begin"], config["proxy_marker_end"]
+    return config["group_marker_begin"], config["group_marker_end"]
 
 
 def replace_between(text: str, begin: str, end: str, body: str) -> str:
