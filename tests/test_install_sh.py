@@ -99,6 +99,53 @@ def test_failed_install_removes_temporary_install_config():
         assert not (home / "Library/Application Support/surge-vless-bridge/config.install.json").exists()
 
 
+def test_uninstall_removes_installed_files():
+    with tempfile.TemporaryDirectory() as td:
+        root = Path(td)
+        home = root / "home"
+        bin_dir = root / "bin"
+        app_dir = home / "Library/Application Support/surge-vless-bridge"
+        agents_dir = home / "Library/LaunchAgents"
+        shortcut = home / ".local/bin/surge-vless-sync"
+        home.mkdir()
+        bin_dir.mkdir()
+        app_dir.mkdir(parents=True)
+        agents_dir.mkdir(parents=True)
+        shortcut.parent.mkdir(parents=True)
+        write_executable(bin_dir / "launchctl", "#!/usr/bin/env bash\nexit 0\n")
+        (app_dir / "config.json").write_text("{}", encoding="utf-8")
+        (agents_dir / "com.casper.surge-vless-bridge.sing-box.plist").write_text("plist", encoding="utf-8")
+        (agents_dir / "com.casper.surge-vless-bridge.sync.plist").write_text("plist", encoding="utf-8")
+        write_executable(shortcut, "#!/usr/bin/env bash\nexit 0\n")
+
+        env = {**os.environ, "HOME": str(home), "PATH": f"{bin_dir}:/usr/bin:/bin"}
+        result = subprocess.run(["bash", "uninstall.sh"], cwd=ROOT, env=env, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
+        assert result.returncode == 0, result.stdout
+        assert not app_dir.exists()
+        assert not shortcut.exists()
+        assert not (agents_dir / "com.casper.surge-vless-bridge.sing-box.plist").exists()
+        assert not (agents_dir / "com.casper.surge-vless-bridge.sync.plist").exists()
+
+
+def test_uninstall_can_keep_config():
+    with tempfile.TemporaryDirectory() as td:
+        root = Path(td)
+        home = root / "home"
+        bin_dir = root / "bin"
+        app_dir = home / "Library/Application Support/surge-vless-bridge"
+        home.mkdir()
+        bin_dir.mkdir()
+        app_dir.mkdir(parents=True)
+        write_executable(bin_dir / "launchctl", "#!/usr/bin/env bash\nexit 0\n")
+        (app_dir / "config.json").write_text("{}", encoding="utf-8")
+
+        env = {**os.environ, "HOME": str(home), "PATH": f"{bin_dir}:/usr/bin:/bin", "KEEP_CONFIG": "1"}
+        result = subprocess.run(["bash", "uninstall.sh"], cwd=ROOT, env=env, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
+        assert result.returncode == 0, result.stdout
+        assert app_dir.exists()
+        assert (app_dir / "config.json").exists()
+
+
 if __name__ == "__main__":
     tests = [name for name in globals() if name.startswith("test_")]
     for name in tests:

@@ -143,6 +143,18 @@ launchctl print gui/$(id -u)/com.casper.surge-vless-bridge.sing-box
 curl --socks5-hostname 127.0.0.1:39000 https://www.gstatic.com/generate_204 -I
 ```
 
+卸载：
+
+```bash
+bash uninstall.sh
+```
+
+保留配置和生成文件：
+
+```bash
+KEEP_CONFIG=1 bash uninstall.sh
+```
+
 ## Surge 使用方式
 
 生成的策略组默认是：
@@ -179,4 +191,5 @@ Surge 仍然负责规则匹配、策略组、Dashboard 和 reload。`sing-box` �
 /usr/bin/python3 tests/test_install_sh.py
 /usr/bin/python3 -m py_compile surge_vless_bridge.py tests/test_surge_vless_bridge.py
 bash -n install.sh
+bash -n uninstall.sh
 ```
