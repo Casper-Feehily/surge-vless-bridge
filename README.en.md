@@ -12,19 +12,14 @@ The tool keeps Surge as the rule and policy control plane. sing-box handles the 
 - Updates only marked blocks in a Surge profile.
 - Keeps old working config on fetch, parse, sing-box check, or Surge profile check failure.
 - Provides macOS LaunchAgent templates for sing-box keepalive and scheduled sync.
-- Uses Python standard library only.
+- add surge-vless-sync and surge-vless-status shortcut commands.
+
 
 ## Quick install
 
 ```bash
 git clone https://github.com/your-account/surge-vless-bridge.git
 cd surge-vless-bridge
-bash install.sh
-```
-
-Or from an existing checkout:
-
-```bash
 bash install.sh
 ```
 
