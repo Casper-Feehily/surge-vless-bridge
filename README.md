@@ -14,19 +14,13 @@
 - 只更新 Surge profile 中被 marker 包住的托管区块。
 - 订阅获取、解析、sing-box 检查或 Surge profile 检查失败时，会保留旧的可用配置。
 - 提供 macOS LaunchAgent，用于 sing-box keepalive 和定时同步。
-- 只使用 Python standard library。
+- 创建surge-vless-status和surge-vless-sync命令用于查看订阅状态和更新订阅。
 
 ## 快速安装
 
 ```bash
-git clone https://github.com/your-account/surge-vless-bridge.git
+git clone https://github.com/Casper-Feehily/surge-vless-bridge.git
 cd surge-vless-bridge
-bash install.sh
-```
-
-已有 checkout 时直接运行：
-
-```bash
 bash install.sh
 ```
 
@@ -39,7 +33,7 @@ bash install.sh
 - 缺少 `[Proxy]` 或 `[Proxy Group]` 时自动创建。
 - 在 Surge profile 中补齐托管 marker。
 - 询问 VLESS 节点订阅链接。
-- 询问订阅刷新间隔，单位是小时。
+- 询问订阅刷新间隔，单位是小时，支持小数。
 - 安装 `surge-vless-sync` 和 `surge-vless-status` 快捷命令。zsh、bash、fish 会自动配置；其他 shell 会询问 home 路径和启动配置文件路径后直接写入。
 - 写入 `~/Library/Application Support/surge-vless-bridge/config.json`。
 - 执行首次同步并加载 LaunchAgents。
