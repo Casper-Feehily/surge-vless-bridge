@@ -127,6 +127,12 @@ surge-vless-sync
 
 The installer adds `~/.local/bin` to the current shell startup file: `~/.zshrc` for zsh, `~/.bashrc` and `~/.bash_profile` for bash, or `~/.config/fish/config.fish` for fish. Restart the terminal after install to use the short command directly.
 
+Check status:
+
+```bash
+surge-vless-status
+```
+
 Reload LaunchAgents:
 
 ```bash

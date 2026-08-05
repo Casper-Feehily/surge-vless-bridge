@@ -63,6 +63,7 @@ msg() {
     zh:done) printf "%s\n" "完成。" ;;
     zh:config) printf "配置文件: %s\n" "${APP_DIR}/config.json" ;;
     zh:sync_command) printf "%s\n" "同步命令: surge-vless-sync" ;;
+    zh:status_command) printf "%s\n" "状态命令: surge-vless-status" ;;
     zh:restart_terminal) printf "%s\n" "重启终端后即可使用这个短命令。" ;;
     zh:refresh_result) printf "刷新间隔: 每 %s 小时\n" "${SYNC_INTERVAL_HOURS}" ;;
     zh:markers_done) printf "Surge profile marker 已写入: %s\n" "${SURGE_PROFILE_PATH}" ;;
@@ -87,6 +88,7 @@ msg() {
       done) printf "%s\n" "Done." ;;
       config) printf "Config: %s\n" "${APP_DIR}/config.json" ;;
       sync_command) printf "%s\n" "Sync command: surge-vless-sync" ;;
+      status_command) printf "%s\n" "Status command: surge-vless-status" ;;
       restart_terminal) printf "%s\n" "Restart your terminal before using the short sync command." ;;
       refresh_result) printf "Refresh interval: every %s hour(s)\n" "${SYNC_INTERVAL_HOURS}" ;;
       markers_done) printf "Surge profile markers ensured in: %s\n" "${SURGE_PROFILE_PATH}" ;;
@@ -303,6 +305,31 @@ else
 fi
 SH
 chmod +x "${BIN_DIR}/surge-vless-sync"
+
+cat > "${BIN_DIR}/surge-vless-status" <<SH
+#!/usr/bin/env bash
+set -euo pipefail
+APP_DIR="${APP_DIR}"
+CONFIG="\${APP_DIR}/config.json"
+STATE="\${APP_DIR}/state.json"
+echo "Config: \${CONFIG}"
+if [[ -f "\${STATE}" ]]; then
+  /usr/bin/python3 - "\${STATE}" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+state = json.loads(Path(sys.argv[1]).read_text())
+print(f"Last sync: {state.get('updated_at', 'unknown')}")
+print(f"Nodes: {state.get('count', 'unknown')}")
+PY
+else
+  echo "Last sync: never"
+fi
+launchctl print "gui/\$(id -u)/com.casper.surge-vless-bridge.sing-box" >/dev/null 2>&1 && echo "sing-box agent: loaded" || echo "sing-box agent: not loaded"
+launchctl print "gui/\$(id -u)/com.casper.surge-vless-bridge.sync" >/dev/null 2>&1 && echo "sync agent: loaded" || echo "sync agent: not loaded"
+SH
+chmod +x "${BIN_DIR}/surge-vless-status"
 ensure_path
 
 msg installed
@@ -318,6 +345,7 @@ launchctl bootstrap "gui/$(id -u)" "${AGENTS_DIR}/com.casper.surge-vless-bridge.
 msg done
 msg config
 msg sync_command
+msg status_command
 msg restart_terminal
 msg refresh_result
 msg markers_done

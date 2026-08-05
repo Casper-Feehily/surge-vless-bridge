@@ -62,10 +62,18 @@ def test_noninteractive_install_creates_expected_files():
         sync_plist = home / "Library/LaunchAgents/com.casper.surge-vless-bridge.sync.plist"
         assert "<integer>1800</integer>" in sync_plist.read_text(encoding="utf-8")
         shortcut = home / ".local/bin/surge-vless-sync"
+        status_cmd = home / ".local/bin/surge-vless-status"
         assert shortcut.exists()
         assert os.access(shortcut, os.X_OK)
+        assert status_cmd.exists()
+        assert os.access(status_cmd, os.X_OK)
+        status = subprocess.run([str(status_cmd)], env=env, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
+        assert status.returncode == 0, status.stdout
+        assert "Config:" in status.stdout
+        assert "Nodes: 1" in status.stdout
         assert 'export PATH="$HOME/.local/bin:$PATH"' in (home / ".zshrc").read_text(encoding="utf-8")
         assert "Sync command: surge-vless-sync" in result.stdout
+        assert "Status command: surge-vless-status" in result.stdout
 
 
 def test_failed_install_removes_temporary_install_config():
@@ -107,6 +115,7 @@ def test_uninstall_removes_installed_files():
         app_dir = home / "Library/Application Support/surge-vless-bridge"
         agents_dir = home / "Library/LaunchAgents"
         shortcut = home / ".local/bin/surge-vless-sync"
+        status_cmd = home / ".local/bin/surge-vless-status"
         home.mkdir()
         bin_dir.mkdir()
         app_dir.mkdir(parents=True)
@@ -117,12 +126,14 @@ def test_uninstall_removes_installed_files():
         (agents_dir / "com.casper.surge-vless-bridge.sing-box.plist").write_text("plist", encoding="utf-8")
         (agents_dir / "com.casper.surge-vless-bridge.sync.plist").write_text("plist", encoding="utf-8")
         write_executable(shortcut, "#!/usr/bin/env bash\nexit 0\n")
+        write_executable(status_cmd, "#!/usr/bin/env bash\nexit 0\n")
 
         env = {**os.environ, "HOME": str(home), "PATH": f"{bin_dir}:/usr/bin:/bin"}
         result = subprocess.run(["bash", "uninstall.sh"], cwd=ROOT, env=env, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
         assert result.returncode == 0, result.stdout
         assert not app_dir.exists()
         assert not shortcut.exists()
+        assert not status_cmd.exists()
         assert not (agents_dir / "com.casper.surge-vless-bridge.sing-box.plist").exists()
         assert not (agents_dir / "com.casper.surge-vless-bridge.sync.plist").exists()
 

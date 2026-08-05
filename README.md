@@ -129,6 +129,12 @@ surge-vless-sync
 
 安装脚本会按当前 shell 把 `~/.local/bin` 加到启动配置：zsh 写入 `~/.zshrc`，bash 写入 `~/.bashrc` 和 `~/.bash_profile`，fish 写入 `~/.config/fish/config.fish`。安装后重开终端即可直接使用短命令。
 
+查看状态：
+
+```bash
+surge-vless-status
+```
+
 重新加载 LaunchAgents：
 
 ```bash
