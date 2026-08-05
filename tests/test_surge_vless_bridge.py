@@ -55,10 +55,41 @@ def test_parse_plain_vless_list():
     assert cfg["outbounds"][2]["transport"]["service_name"] == "mygrpc"
 
 
+def test_parse_httpupgrade_and_quic_transports():
+    raw = "\n".join([
+        "vless://u1@hu.example.com:443?security=tls&type=httpupgrade&host=cdn.example.com&path=%2Fup#HTTPUpgrade",
+        "vless://u2@quic.example.com:443?security=tls&type=quic#QUIC",
+    ])
+    nodes = bridge.parse_nodes(raw, BASE_CONFIG)
+    cfg = bridge.build_sing_box(nodes, BASE_CONFIG)
+    assert cfg["outbounds"][1]["transport"] == {"type": "httpupgrade", "path": "/up", "host": "cdn.example.com"}
+    assert cfg["outbounds"][2]["transport"] == {"type": "quic"}
+
+
 def test_name_cleanup_and_template():
     cfg = {**BASE_CONFIG, "name_strip_patterns": [r"^Provider-\d+@"], "name_template": "Node {index} {name}"}
     nodes = bridge.parse_nodes("vless://u@example.com:443?security=none&type=tcp#Provider-123@example.com:443", cfg)
     assert nodes[0].name == "Node 1 example.com:443"
+
+
+def test_duplicate_and_invalid_node_names_are_sanitized():
+    raw = "\n".join([
+        "vless://u1@example.com:443?security=none&type=tcp#Bad,Name=One",
+        "vless://u2@example.com:443?security=none&type=tcp#Bad%2CName%3DOne",
+        "vless://u3@example.com:443?security=none&type=tcp#%0A",
+    ])
+    nodes = bridge.parse_nodes(raw, BASE_CONFIG)
+    assert [node.name for node in nodes] == ["Bad Name One", "Bad Name One 2", "example.com"]
+
+
+def test_reality_requires_public_key():
+    try:
+        nodes = bridge.parse_nodes("vless://u@example.com:443?security=reality&type=tcp#Reality", BASE_CONFIG)
+        bridge.build_sing_box(nodes, BASE_CONFIG)
+    except ValueError as exc:
+        assert "reality node missing public key" in str(exc)
+    else:
+        raise AssertionError("expected missing Reality public key to fail")
 
 
 def test_replace_generic_markers_and_preserve_manual_lines():
