@@ -178,6 +178,7 @@ Surge 仍然负责规则匹配、策略组、Dashboard 和 reload。`sing-box` �
 
 ```bash
 /usr/bin/python3 tests/test_surge_vless_bridge.py
+/usr/bin/python3 tests/test_install_sh.py
 /usr/bin/python3 -m py_compile surge_vless_bridge.py tests/test_surge_vless_bridge.py
 bash -n install.sh
 ```
