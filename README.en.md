@@ -147,13 +147,13 @@ launchctl print gui/$(id -u)/com.casper.surge-vless-bridge.sing-box
 curl --socks5-hostname 127.0.0.1:39000 https://www.gstatic.com/generate_204 -I
 ```
 
-Uninstall:
+Uninstall stops and removes both LaunchAgents, deletes `surge-vless-sync` / `surge-vless-status`, and removes config, logs, state, and generated files under `~/Library/Application Support/surge-vless-bridge`:
 
 ```bash
 bash uninstall.sh
 ```
 
-Keep config and generated files:
+To remove only the LaunchAgents and shortcut commands while keeping config, logs, state, and generated files:
 
 ```bash
 KEEP_CONFIG=1 bash uninstall.sh

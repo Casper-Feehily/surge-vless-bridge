@@ -149,13 +149,13 @@ launchctl print gui/$(id -u)/com.casper.surge-vless-bridge.sing-box
 curl --socks5-hostname 127.0.0.1:39000 https://www.gstatic.com/generate_204 -I
 ```
 
-卸载：
+卸载会停止并移除两个 LaunchAgent，删除 `surge-vless-sync` / `surge-vless-status`，并删除 `~/Library/Application Support/surge-vless-bridge` 里的配置、日志、状态和生成文件：
 
 ```bash
 bash uninstall.sh
 ```
 
-保留配置和生成文件：
+如果只想移除 LaunchAgent 和快捷命令，但保留配置、日志、状态和生成文件：
 
 ```bash
 KEEP_CONFIG=1 bash uninstall.sh
