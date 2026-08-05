@@ -81,6 +81,7 @@ def test_unknown_shell_prompts_for_command_home():
         root = Path(td)
         home = root / "home"
         command_home = root / "command-home"
+        command_rc = command_home / ".customrc"
         bin_dir = root / "bin"
         sub = root / "sub.txt"
         profile = root / "surge.conf"
@@ -104,11 +105,12 @@ def test_unknown_shell_prompts_for_command_home():
             "SUBSCRIPTION_URL": str(sub),
             "SYNC_INTERVAL_HOURS": "1",
         }
-        result = subprocess.run(["bash", "install.sh"], cwd=ROOT, env=env, input=f"{command_home}\n", text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
+        result = subprocess.run(["bash", "install.sh"], cwd=ROOT, env=env, input=f"{command_home}\n{command_rc}\n", text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
         assert result.returncode == 0, result.stdout
         assert (command_home / ".local/bin/surge-vless-sync").exists()
         assert (command_home / ".local/bin/surge-vless-status").exists()
-        assert f"{command_home}/.local/bin/surge-vless-sync" in result.stdout
+        assert f'export PATH="{command_home}/.local/bin:$PATH"' in command_rc.read_text(encoding="utf-8")
+        assert "Sync command: surge-vless-sync" in result.stdout
 
 
 def test_failed_install_removes_temporary_install_config():

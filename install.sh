@@ -5,6 +5,7 @@ APP_NAME="surge-vless-bridge"
 APP_DIR="${HOME}/Library/Application Support/${APP_NAME}"
 AGENTS_DIR="${HOME}/Library/LaunchAgents"
 BIN_DIR=""
+COMMAND_RC_FILE=""
 SRC_DIR="$(cd "$(dirname "$0")" && pwd)"
 SING_BOX=""
 SURGE_CLI="${SURGE_CLI_PATH:-/Applications/Surge.app/Contents/Applications/surge-cli}"
@@ -47,6 +48,7 @@ msg() {
     zh:subscription_url) printf "%s\n" "VLESS 节点订阅链接" ;;
     zh:refresh_interval) printf "%s\n" "订阅刷新间隔（小时）" ;;
     zh:command_home) printf "%s\n" "快捷命令安装用的 home 路径" ;;
+    zh:command_rc_file) printf "%s\n" "当前 shell 的启动配置文件路径" ;;
     zh:positive_number) printf "%s\n" "请输入正数，例如 1 或 0.5。" ;;
     zh:surge_missing) printf "未找到 Surge: %s\n" "${SURGE_CLI}" ;;
     zh:surge_missing_hint) printf "%s\n" "请先安装 Surge for macOS，或用 SURGE_CLI_PATH=/path/to/surge-cli 指定路径。" ;;
@@ -56,8 +58,6 @@ msg() {
     zh:sing_box_missing_after_install) printf "%s\n" "sing-box 安装已结束，但仍不在 PATH 中。" ;;
     zh:profile_not_found) printf "未找到 Surge profile: %s\n" "${SURGE_PROFILE_PATH}" ;;
     zh:interval_invalid) printf "%s\n" "SYNC_INTERVAL_HOURS 必须是正数，例如 1 或 0.5。" ;;
-    zh:path_unknown_shell) printf "无法自动为当前 shell 更新 PATH: %s\n" "${SHELL:-unknown}" ;;
-    zh:path_manual_hint) printf "如需直接运行 surge-vless-sync，请手动把 %s 加入 PATH。\n" "${BIN_DIR}" ;;
     zh:installed) printf "已安装 %s。\n" "${APP_NAME}" ;;
     zh:first_sync) printf "%s\n" "正在执行首次同步..." ;;
     zh:loading_agents) printf "%s\n" "正在加载 LaunchAgents..." ;;
@@ -65,7 +65,6 @@ msg() {
     zh:config) printf "配置文件: %s\n" "${APP_DIR}/config.json" ;;
     zh:sync_command) printf "%s\n" "同步命令: surge-vless-sync" ;;
     zh:status_command) printf "%s\n" "状态命令: surge-vless-status" ;;
-    zh:sync_command_full) printf "当前 shell 未自动配置 PATH，也可以直接运行: %s/surge-vless-sync\n" "${BIN_DIR}" ;;
     zh:restart_terminal) printf "%s\n" "重启终端后即可使用这个短命令。" ;;
     zh:refresh_result) printf "刷新间隔: 每 %s 小时\n" "${SYNC_INTERVAL_HOURS}" ;;
     zh:markers_done) printf "Surge profile marker 已写入: %s\n" "${SURGE_PROFILE_PATH}" ;;
@@ -74,6 +73,7 @@ msg() {
       subscription_url) printf "%s\n" "VLESS node subscription URL" ;;
       refresh_interval) printf "%s\n" "Refresh interval in hours" ;;
       command_home) printf "%s\n" "Home path for shortcut commands" ;;
+      command_rc_file) printf "%s\n" "Startup file path for your current shell" ;;
       positive_number) printf "%s\n" "Enter a positive number, for example 1 or 0.5." ;;
       surge_missing) printf "Surge not found: %s\n" "${SURGE_CLI}" ;;
       surge_missing_hint) printf "%s\n" "Install Surge for macOS first, or run with SURGE_CLI_PATH=/path/to/surge-cli." ;;
@@ -83,8 +83,6 @@ msg() {
       sing_box_missing_after_install) printf "%s\n" "sing-box installation finished, but sing-box is still not on PATH." ;;
       profile_not_found) printf "Surge profile not found: %s\n" "${SURGE_PROFILE_PATH}" ;;
       interval_invalid) printf "%s\n" "SYNC_INTERVAL_HOURS must be a positive number, for example 1 or 0.5." ;;
-      path_unknown_shell) printf "Could not update PATH automatically for shell: %s\n" "${SHELL:-unknown}" ;;
-      path_manual_hint) printf "Add %s to PATH if you want to run surge-vless-sync without the full path.\n" "${BIN_DIR}" ;;
       installed) printf "Installed %s.\n" "${APP_NAME}" ;;
       first_sync) printf "%s\n" "Running first sync..." ;;
       loading_agents) printf "%s\n" "Loading LaunchAgents..." ;;
@@ -92,7 +90,6 @@ msg() {
       config) printf "Config: %s\n" "${APP_DIR}/config.json" ;;
       sync_command) printf "%s\n" "Sync command: surge-vless-sync" ;;
       status_command) printf "%s\n" "Status command: surge-vless-status" ;;
-      sync_command_full) printf "This shell was not configured automatically. You can also run: %s/surge-vless-sync\n" "${BIN_DIR}" ;;
       restart_terminal) printf "%s\n" "Restart your terminal before using the short sync command." ;;
       refresh_result) printf "Refresh interval: every %s hour(s)\n" "${SYNC_INTERVAL_HOURS}" ;;
       markers_done) printf "Surge profile markers ensured in: %s\n" "${SURGE_PROFILE_PATH}" ;;
@@ -173,6 +170,7 @@ configure_bin_dir() {
       ;;
     *)
       command_home="$(expand_path "${COMMAND_HOME:-$(prompt_required "$(msg command_home)" "${HOME}")}")"
+      COMMAND_RC_FILE="$(expand_path "${COMMAND_RC_PATH:-$(prompt_required "$(msg command_rc_file)" "${command_home}/.profile")}")"
       ;;
   esac
   BIN_DIR="${command_home}/.local/bin"
@@ -181,7 +179,9 @@ configure_bin_dir() {
 ensure_path() {
   local shell_name
   local path_line='export PATH="$HOME/.local/bin:$PATH"'
+  local custom_path_line
   shell_name="$(basename "${SHELL:-}")"
+  custom_path_line="export PATH=\"${BIN_DIR}:\$PATH\""
   case "${shell_name}" in
     zsh)
       touch "${HOME}/.zshrc"
@@ -198,8 +198,9 @@ ensure_path() {
       grep -Fq 'fish_add_path -g "$HOME/.local/bin"' "${HOME}/.config/fish/config.fish" || printf "\n# surge-vless-bridge\nfish_add_path -g \"\$HOME/.local/bin\"\n" >> "${HOME}/.config/fish/config.fish"
       ;;
     *)
-      msg path_unknown_shell >&2
-      msg path_manual_hint >&2
+      mkdir -p "$(dirname "${COMMAND_RC_FILE}")"
+      touch "${COMMAND_RC_FILE}"
+      grep -Fq "${custom_path_line}" "${COMMAND_RC_FILE}" || printf "\n# surge-vless-bridge\n%s\n" "${custom_path_line}" >> "${COMMAND_RC_FILE}"
       ;;
   esac
 }
@@ -366,10 +367,6 @@ msg done
 msg config
 msg sync_command
 msg status_command
-if [[ "$(basename "${SHELL:-}")" == "zsh" || "$(basename "${SHELL:-}")" == "bash" || "$(basename "${SHELL:-}")" == "fish" ]]; then
-  msg restart_terminal
-else
-  msg sync_command_full
-fi
+msg restart_terminal
 msg refresh_result
 msg markers_done

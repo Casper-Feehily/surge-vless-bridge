@@ -19,7 +19,7 @@
 ## 快速安装
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/your-account/surge-vless-bridge.git
 cd surge-vless-bridge
 bash install.sh
 ```
@@ -40,7 +40,7 @@ bash install.sh
 - 在 Surge profile 中补齐托管 marker。
 - 询问 VLESS 节点订阅链接。
 - 询问订阅刷新间隔，单位是小时。
-- 安装 `surge-vless-sync` 和 `surge-vless-status` 快捷命令。zsh、bash、fish 会自动配置；其他 shell 会询问快捷命令安装用的 home 路径。
+- 安装 `surge-vless-sync` 和 `surge-vless-status` 快捷命令。zsh、bash、fish 会自动配置；其他 shell 会询问 home 路径和启动配置文件路径后直接写入。
 - 写入 `~/Library/Application Support/surge-vless-bridge/config.json`。
 - 执行首次同步并加载 LaunchAgents。
 
@@ -56,7 +56,7 @@ bash install.sh
 
 `SYNC_INTERVAL_HOURS` 必须是正数，支持小数，例如 `0.5` 表示 30 分钟。未设置时，安装脚本默认每 1 小时刷新一次订阅。`INSTALL_LANG` 可设为 `zh` 或 `en`，用于跳过语言选择。
 
-如果你的 shell 不是 zsh、bash 或 fish，可以额外设置 `COMMAND_HOME=/Users/yourname` 来跳过快捷命令安装路径提问。
+如果你的 shell 不是 zsh、bash 或 fish，可以额外设置 `COMMAND_HOME=/Users/yourname` 和 `COMMAND_RC_PATH=/Users/yourname/.profile` 来跳过快捷命令安装路径提问。
 
 ## 安全提醒
 
@@ -132,7 +132,7 @@ surge-vless-sync
 
 安装脚本会按当前 shell 把 `~/.local/bin` 加到启动配置：zsh 写入 `~/.zshrc`，bash 写入 `~/.bashrc` 和 `~/.bash_profile`，fish 写入 `~/.config/fish/config.fish`。安装后重开终端即可直接使用短命令。
 
-如果当前 shell 不是 zsh、bash 或 fish，安装脚本会询问快捷命令安装用的 home 路径，并在结束时显示完整命令路径，例如 `/Users/yourname/.local/bin/surge-vless-sync`。
+如果当前 shell 不是 zsh、bash 或 fish，安装脚本会询问 home 路径和启动配置文件路径，然后直接写入 PATH。安装后重开终端即可使用 `surge-vless-sync`。
 
 查看状态：
 
