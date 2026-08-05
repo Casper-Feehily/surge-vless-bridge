@@ -38,6 +38,7 @@ bash install.sh
 - ensures the managed marker pairs exist in the Surge profile
 - asks for your VLESS subscription URL
 - asks how often to refresh the subscription, in hours
+- installs the `surge-vless-sync` and `surge-vless-status` shortcut commands. zsh, bash, and fish are configured automatically; other shells ask for the home path to use for shortcut installation
 - writes `~/Library/Application Support/surge-vless-bridge/config.json`
 - runs the first sync and loads the LaunchAgents
 
@@ -52,6 +53,8 @@ bash install.sh
 ```
 
 `SYNC_INTERVAL_HOURS` must be a positive number and may be decimal, for example `0.5` for 30 minutes. When omitted, the installer refreshes every 1 hour. Set `INSTALL_LANG` to `zh` or `en` to skip the language prompt.
+
+If your shell is not zsh, bash, or fish, set `COMMAND_HOME=/Users/yourname` to skip the shortcut install path prompt.
 
 ## Security note
 
@@ -126,6 +129,8 @@ surge-vless-sync
 ```
 
 The installer adds `~/.local/bin` to the current shell startup file: `~/.zshrc` for zsh, `~/.bashrc` and `~/.bash_profile` for bash, or `~/.config/fish/config.fish` for fish. Restart the terminal after install to use the short command directly.
+
+If the current shell is not zsh, bash, or fish, the installer asks for the home path to use for shortcut installation and prints the full command path at the end, for example `/Users/yourname/.local/bin/surge-vless-sync`.
 
 Check status:
 

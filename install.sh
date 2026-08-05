@@ -4,7 +4,7 @@ set -euo pipefail
 APP_NAME="surge-vless-bridge"
 APP_DIR="${HOME}/Library/Application Support/${APP_NAME}"
 AGENTS_DIR="${HOME}/Library/LaunchAgents"
-BIN_DIR="${HOME}/.local/bin"
+BIN_DIR=""
 SRC_DIR="$(cd "$(dirname "$0")" && pwd)"
 SING_BOX=""
 SURGE_CLI="${SURGE_CLI_PATH:-/Applications/Surge.app/Contents/Applications/surge-cli}"
@@ -46,6 +46,7 @@ msg() {
     zh:surge_profile_path) printf "%s\n" "Surge profile 路径" ;;
     zh:subscription_url) printf "%s\n" "VLESS 节点订阅链接" ;;
     zh:refresh_interval) printf "%s\n" "订阅刷新间隔（小时）" ;;
+    zh:command_home) printf "%s\n" "快捷命令安装用的 home 路径" ;;
     zh:positive_number) printf "%s\n" "请输入正数，例如 1 或 0.5。" ;;
     zh:surge_missing) printf "未找到 Surge: %s\n" "${SURGE_CLI}" ;;
     zh:surge_missing_hint) printf "%s\n" "请先安装 Surge for macOS，或用 SURGE_CLI_PATH=/path/to/surge-cli 指定路径。" ;;
@@ -64,6 +65,7 @@ msg() {
     zh:config) printf "配置文件: %s\n" "${APP_DIR}/config.json" ;;
     zh:sync_command) printf "%s\n" "同步命令: surge-vless-sync" ;;
     zh:status_command) printf "%s\n" "状态命令: surge-vless-status" ;;
+    zh:sync_command_full) printf "当前 shell 未自动配置 PATH，也可以直接运行: %s/surge-vless-sync\n" "${BIN_DIR}" ;;
     zh:restart_terminal) printf "%s\n" "重启终端后即可使用这个短命令。" ;;
     zh:refresh_result) printf "刷新间隔: 每 %s 小时\n" "${SYNC_INTERVAL_HOURS}" ;;
     zh:markers_done) printf "Surge profile marker 已写入: %s\n" "${SURGE_PROFILE_PATH}" ;;
@@ -71,6 +73,7 @@ msg() {
       surge_profile_path) printf "%s\n" "Surge profile path" ;;
       subscription_url) printf "%s\n" "VLESS node subscription URL" ;;
       refresh_interval) printf "%s\n" "Refresh interval in hours" ;;
+      command_home) printf "%s\n" "Home path for shortcut commands" ;;
       positive_number) printf "%s\n" "Enter a positive number, for example 1 or 0.5." ;;
       surge_missing) printf "Surge not found: %s\n" "${SURGE_CLI}" ;;
       surge_missing_hint) printf "%s\n" "Install Surge for macOS first, or run with SURGE_CLI_PATH=/path/to/surge-cli." ;;
@@ -89,6 +92,7 @@ msg() {
       config) printf "Config: %s\n" "${APP_DIR}/config.json" ;;
       sync_command) printf "%s\n" "Sync command: surge-vless-sync" ;;
       status_command) printf "%s\n" "Status command: surge-vless-status" ;;
+      sync_command_full) printf "This shell was not configured automatically. You can also run: %s/surge-vless-sync\n" "${BIN_DIR}" ;;
       restart_terminal) printf "%s\n" "Restart your terminal before using the short sync command." ;;
       refresh_result) printf "Refresh interval: every %s hour(s)\n" "${SYNC_INTERVAL_HOURS}" ;;
       markers_done) printf "Surge profile markers ensured in: %s\n" "${SURGE_PROFILE_PATH}" ;;
@@ -159,6 +163,21 @@ detect_or_install_sing_box() {
   fi
 }
 
+configure_bin_dir() {
+  local shell_name
+  local command_home
+  shell_name="$(basename "${SHELL:-}")"
+  case "${shell_name}" in
+    zsh|bash|fish)
+      command_home="${HOME}"
+      ;;
+    *)
+      command_home="$(expand_path "${COMMAND_HOME:-$(prompt_required "$(msg command_home)" "${HOME}")}")"
+      ;;
+  esac
+  BIN_DIR="${command_home}/.local/bin"
+}
+
 ensure_path() {
   local shell_name
   local path_line='export PATH="$HOME/.local/bin:$PATH"'
@@ -186,6 +205,7 @@ ensure_path() {
 }
 
 choose_language
+configure_bin_dir
 detect_surge
 detect_or_install_sing_box
 
@@ -346,6 +366,10 @@ msg done
 msg config
 msg sync_command
 msg status_command
-msg restart_terminal
+if [[ "$(basename "${SHELL:-}")" == "zsh" || "$(basename "${SHELL:-}")" == "bash" || "$(basename "${SHELL:-}")" == "fish" ]]; then
+  msg restart_terminal
+else
+  msg sync_command_full
+fi
 msg refresh_result
 msg markers_done

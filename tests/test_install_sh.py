@@ -76,6 +76,41 @@ def test_noninteractive_install_creates_expected_files():
         assert "Status command: surge-vless-status" in result.stdout
 
 
+def test_unknown_shell_prompts_for_command_home():
+    with tempfile.TemporaryDirectory() as td:
+        root = Path(td)
+        home = root / "home"
+        command_home = root / "command-home"
+        bin_dir = root / "bin"
+        sub = root / "sub.txt"
+        profile = root / "surge.conf"
+        home.mkdir()
+        command_home.mkdir()
+        bin_dir.mkdir()
+        sub.write_text("vless://u@example.com:443?security=none&type=tcp#Node", encoding="utf-8")
+        profile.write_text("[General]\nloglevel = notify\n", encoding="utf-8")
+        write_executable(bin_dir / "sing-box", "#!/usr/bin/env bash\nexit 0\n")
+        write_executable(bin_dir / "surge-cli", "#!/usr/bin/env bash\nexit 0\n")
+        write_executable(bin_dir / "launchctl", "#!/usr/bin/env bash\nexit 0\n")
+
+        env = {
+            **os.environ,
+            "HOME": str(home),
+            "PATH": f"{bin_dir}:/usr/bin:/bin",
+            "SHELL": "/bin/customshell",
+            "INSTALL_LANG": "en",
+            "SURGE_CLI_PATH": str(bin_dir / "surge-cli"),
+            "SURGE_PROFILE_PATH": str(profile),
+            "SUBSCRIPTION_URL": str(sub),
+            "SYNC_INTERVAL_HOURS": "1",
+        }
+        result = subprocess.run(["bash", "install.sh"], cwd=ROOT, env=env, input=f"{command_home}\n", text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
+        assert result.returncode == 0, result.stdout
+        assert (command_home / ".local/bin/surge-vless-sync").exists()
+        assert (command_home / ".local/bin/surge-vless-status").exists()
+        assert f"{command_home}/.local/bin/surge-vless-sync" in result.stdout
+
+
 def test_failed_install_removes_temporary_install_config():
     with tempfile.TemporaryDirectory() as td:
         root = Path(td)
