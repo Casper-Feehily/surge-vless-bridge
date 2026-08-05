@@ -68,6 +68,37 @@ def test_noninteractive_install_creates_expected_files():
         assert "Sync command: surge-vless-sync" in result.stdout
 
 
+def test_failed_install_removes_temporary_install_config():
+    with tempfile.TemporaryDirectory() as td:
+        root = Path(td)
+        home = root / "home"
+        bin_dir = root / "bin"
+        sub = root / "sub.txt"
+        profile = root / "surge.conf"
+        home.mkdir()
+        bin_dir.mkdir()
+        sub.write_text("not a subscription", encoding="utf-8")
+        profile.write_text("[General]\nloglevel = notify\n", encoding="utf-8")
+        write_executable(bin_dir / "sing-box", "#!/usr/bin/env bash\nexit 0\n")
+        write_executable(bin_dir / "surge-cli", "#!/usr/bin/env bash\nexit 0\n")
+        write_executable(bin_dir / "launchctl", "#!/usr/bin/env bash\nexit 0\n")
+
+        env = {
+            **os.environ,
+            "HOME": str(home),
+            "PATH": f"{bin_dir}:/usr/bin:/bin",
+            "SHELL": "/bin/zsh",
+            "INSTALL_LANG": "en",
+            "SURGE_CLI_PATH": str(bin_dir / "surge-cli"),
+            "SURGE_PROFILE_PATH": str(profile),
+            "SUBSCRIPTION_URL": str(sub),
+            "SYNC_INTERVAL_HOURS": "1",
+        }
+        result = subprocess.run(["bash", "install.sh"], cwd=ROOT, env=env, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
+        assert result.returncode == 1, result.stdout
+        assert not (home / "Library/Application Support/surge-vless-bridge/config.install.json").exists()
+
+
 if __name__ == "__main__":
     tests = [name for name in globals() if name.startswith("test_")]
     for name in tests:

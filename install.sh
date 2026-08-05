@@ -9,6 +9,14 @@ SRC_DIR="$(cd "$(dirname "$0")" && pwd)"
 SING_BOX=""
 SURGE_CLI="${SURGE_CLI_PATH:-/Applications/Surge.app/Contents/Applications/surge-cli}"
 INSTALL_LANG="${INSTALL_LANG:-}"
+INSTALL_CONFIG=""
+
+cleanup() {
+  if [[ -n "${INSTALL_CONFIG}" ]]; then
+    rm -f "${INSTALL_CONFIG}"
+  fi
+}
+trap cleanup EXIT
 
 expand_path() {
   case "$1" in
@@ -300,7 +308,6 @@ ensure_path
 msg installed
 msg first_sync
 /usr/bin/python3 "${APP_DIR}/surge_vless_bridge.py" -c "${INSTALL_CONFIG}"
-rm -f "${INSTALL_CONFIG}"
 
 msg loading_agents
 launchctl bootout "gui/$(id -u)" "${AGENTS_DIR}/com.casper.surge-vless-bridge.sing-box.plist" >/dev/null 2>&1 || true
