@@ -136,12 +136,6 @@ launchctl bootstrap gui/$(id -u) "$HOME/Library/LaunchAgents/com.casper.surge-vl
 launchctl bootstrap gui/$(id -u) "$HOME/Library/LaunchAgents/com.casper.surge-vless-bridge.sync.plist"
 ```
 
-立即触发同步：
-
-```bash
-surge-vless-sync
-```
-
 检查 sing-box：
 
 ```bash
