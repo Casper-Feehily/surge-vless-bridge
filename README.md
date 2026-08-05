@@ -55,6 +55,10 @@ bash install.sh
 
 `SYNC_INTERVAL_HOURS` 必须是正数，支持小数，例如 `0.5` 表示 30 分钟。未设置时，安装脚本默认每 1 小时刷新一次订阅。`INSTALL_LANG` 可设为 `zh` 或 `en`，用于跳过语言选择。
 
+## 安全提醒
+
+VLESS 订阅链接通常包含账号凭据。不要把真实的 `subscription_url` 提交到 GitHub。安装脚本会把真实配置写到 `~/Library/Application Support/surge-vless-bridge/config.json`，仓库里的 `.gitignore` 也会忽略本地 `config.json`，避免误提交。
+
 ## Surge profile marker
 
 同步程序会自动把下面的 marker 补到 `[Proxy]`：

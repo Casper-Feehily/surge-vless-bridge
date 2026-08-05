@@ -53,6 +53,10 @@ bash install.sh
 
 `SYNC_INTERVAL_HOURS` must be a positive number and may be decimal, for example `0.5` for 30 minutes. When omitted, the installer refreshes every 1 hour. Set `INSTALL_LANG` to `zh` or `en` to skip the language prompt.
 
+## Security note
+
+VLESS subscription URLs usually contain account credentials. Do not commit a real `subscription_url` to GitHub. The installer writes the real config to `~/Library/Application Support/surge-vless-bridge/config.json`, and the repo `.gitignore` ignores local `config.json` to prevent accidental commits.
+
 ## Surge profile markers
 
 The sync program ensures these markers exist inside `[Proxy]`:
