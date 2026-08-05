@@ -37,7 +37,7 @@ bash install.sh
 - 缺少 `sing-box` 时用 Homebrew 安装。
 - 询问 Surge profile 路径。
 - 缺少 `[Proxy]` 或 `[Proxy Group]` 时自动创建。
-- 在 Surge profile 中写入托管 marker。
+- 在 Surge profile 中补齐托管 marker。
 - 询问 VLESS 节点订阅链接。
 - 询问订阅刷新间隔，单位是小时。
 - 写入 `~/Library/Application Support/surge-vless-bridge/config.json`。
@@ -57,14 +57,14 @@ bash install.sh
 
 ## Surge profile marker
 
-安装脚本会自动把下面的 marker 写入 `[Proxy]`：
+同步程序会自动把下面的 marker 补到 `[Proxy]`：
 
 ```ini
 # BEGIN SURGE VLESS BRIDGE PROXIES
 # END SURGE VLESS BRIDGE PROXIES
 ```
 
-并把下面的 marker 写入 `[Proxy Group]`：
+并把下面的 marker 补到 `[Proxy Group]`：
 
 ```ini
 # BEGIN SURGE VLESS BRIDGE GROUP

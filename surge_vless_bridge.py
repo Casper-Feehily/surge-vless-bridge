@@ -328,6 +328,40 @@ def marker_pair(config: dict, kind: str, profile_text: str) -> tuple[str, str]:
     return config["group_marker_begin"], config["group_marker_end"]
 
 
+def ensure_section(text: str, section: str) -> str:
+    if re.search(rf"(?m)^\[{re.escape(section)}\]\s*$", text):
+        return text
+    if text and not text.endswith("\n"):
+        text += "\n"
+    return text + f"\n[{section}]\n"
+
+
+def ensure_markers(text: str, section: str, begin: str, end: str) -> str:
+    if begin in text and end in text:
+        return text
+    if begin in text or end in text:
+        raise ValueError(f"incomplete marker pair in {section}: {begin} / {end}")
+    lines = text.splitlines()
+    header = next(i for i, line in enumerate(lines) if line.strip() == f"[{section}]")
+    insert_at = len(lines)
+    for i in range(header + 1, len(lines)):
+        if re.match(r"^\[[^\]]+\]\s*$", lines[i].strip()):
+            insert_at = i
+            break
+    markers = [begin, end, ""]
+    if insert_at > header + 1 and lines[insert_at - 1].strip():
+        markers.insert(0, "")
+    lines[insert_at:insert_at] = markers
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def ensure_profile_markers(text: str, config: dict) -> str:
+    text = ensure_section(text, "Proxy")
+    text = ensure_section(text, "Proxy Group")
+    text = ensure_markers(text, "Proxy", config["proxy_marker_begin"], config["proxy_marker_end"])
+    return ensure_markers(text, "Proxy Group", config["group_marker_begin"], config["group_marker_end"])
+
+
 def replace_between(text: str, begin: str, end: str, body: str) -> str:
     pattern = re.compile(rf"({re.escape(begin)})(.*?)(\n{re.escape(end)})", re.S)
     if not pattern.search(text):
@@ -441,6 +475,7 @@ def sync(config_path: Path, dry_run: bool = False) -> int:
         proxy_block, group_block = build_surge_blocks(nodes, config)
         profile_path = Path(config["surge_profile_path"])
         profile_text = profile_path.read_text(encoding="utf-8")
+        profile_text = ensure_profile_markers(profile_text, config)
         profile_text = replace_between(profile_text, *marker_pair(config, "proxy", profile_text), proxy_block)
         profile_text = replace_between(profile_text, *marker_pair(config, "group", profile_text), group_block)
         validate_surge_profile(profile_text, config)

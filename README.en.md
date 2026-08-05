@@ -35,7 +35,7 @@ bash install.sh
 - installs `sing-box` with Homebrew when it is missing
 - asks for your Surge profile path
 - creates `[Proxy]` or `[Proxy Group]` sections when missing
-- adds the managed marker pairs to the Surge profile
+- ensures the managed marker pairs exist in the Surge profile
 - asks for your VLESS subscription URL
 - asks how often to refresh the subscription, in hours
 - writes `~/Library/Application Support/surge-vless-bridge/config.json`
@@ -55,14 +55,14 @@ bash install.sh
 
 ## Surge profile markers
 
-Add these markers inside `[Proxy]`:
+The sync program ensures these markers exist inside `[Proxy]`:
 
 ```ini
 # BEGIN SURGE VLESS BRIDGE PROXIES
 # END SURGE VLESS BRIDGE PROXIES
 ```
 
-Add these markers inside `[Proxy Group]`:
+And ensures these markers exist inside `[Proxy Group]`:
 
 ```ini
 # BEGIN SURGE VLESS BRIDGE GROUP

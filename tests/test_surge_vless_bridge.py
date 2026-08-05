@@ -84,6 +84,39 @@ old
     assert "VLESS = select, Node" in updated
 
 
+def test_sync_creates_missing_surge_sections_and_markers():
+    with tempfile.TemporaryDirectory() as td:
+        root = Path(td)
+        sub = root / "sub.txt"
+        profile = root / "surge.conf"
+        sb = root / "sing-box.json"
+        sub.write_text("vless://u@example.com:443?security=none&type=tcp#Node", encoding="utf-8")
+        profile.write_text("[General]\nloglevel = notify\n", encoding="utf-8")
+        cfg = {
+            **BASE_CONFIG,
+            "subscription_url": str(sub),
+            "surge_profile_path": str(profile),
+            "sing_box_config_path": str(sb),
+            "sing_box_path": str(root / "missing-sing-box"),
+            "surge_cli_path": str(root / "missing-surge-cli"),
+            "restart_sing_box": False,
+            "reload_surge": False,
+            "log_path": str(root / "sync.log"),
+            "state_path": str(root / "state.json"),
+            "check_port_conflicts": False,
+        }
+        cfg_path = root / "config.json"
+        cfg_path.write_text(json.dumps(cfg), encoding="utf-8")
+        assert bridge.sync(cfg_path) == 0
+        updated = profile.read_text(encoding="utf-8")
+        assert "[Proxy]" in updated
+        assert "[Proxy Group]" in updated
+        assert bridge.DEFAULT_PROXY_BEGIN in updated
+        assert bridge.DEFAULT_GROUP_BEGIN in updated
+        assert "Node = socks5, 127.0.0.1, 39000, udp-relay=true" in updated
+        assert "VLESS = select, Node" in updated
+
+
 def test_dry_run_full_flow_file_subscription():
     with tempfile.TemporaryDirectory() as td:
         root = Path(td)

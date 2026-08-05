@@ -149,58 +149,6 @@ detect_or_install_sing_box() {
   fi
 }
 
-write_profile_markers() {
-  export SURGE_PROFILE_PATH="$1"
-  /usr/bin/python3 - <<'PY'
-import os
-import re
-import shutil
-import time
-from pathlib import Path
-
-path = Path(os.environ["SURGE_PROFILE_PATH"]).expanduser()
-proxy_begin = "# BEGIN SURGE VLESS BRIDGE PROXIES"
-proxy_end = "# END SURGE VLESS BRIDGE PROXIES"
-group_begin = "# BEGIN SURGE VLESS BRIDGE GROUP"
-group_end = "# END SURGE VLESS BRIDGE GROUP"
-
-def ensure_section(text, section):
-    if re.search(rf"(?m)^\[{re.escape(section)}\]\s*$", text):
-        return text
-    if text and not text.endswith("\n"):
-        text += "\n"
-    return text + f"\n[{section}]\n"
-
-def ensure_markers(text, section, begin, end):
-    if begin in text and end in text:
-        return text
-    if begin in text or end in text:
-        raise SystemExit(f"incomplete marker pair in {section}: {begin} / {end}")
-    lines = text.splitlines()
-    header = next(i for i, line in enumerate(lines) if line.strip() == f"[{section}]")
-    insert_at = len(lines)
-    for i in range(header + 1, len(lines)):
-        if re.match(r"^\[[^\]]+\]\s*$", lines[i].strip()):
-            insert_at = i
-            break
-    if insert_at > header + 1 and lines[insert_at - 1].strip():
-        markers = ["", begin, end, ""]
-    else:
-        markers = [begin, end, ""]
-    lines[insert_at:insert_at] = markers
-    return "\n".join(lines).rstrip() + "\n"
-
-text = path.read_text(encoding="utf-8")
-updated = ensure_section(text, "Proxy")
-updated = ensure_section(updated, "Proxy Group")
-updated = ensure_markers(updated, "Proxy", proxy_begin, proxy_end)
-updated = ensure_markers(updated, "Proxy Group", group_begin, group_end)
-if updated != text:
-    shutil.copy2(path, path.with_suffix(path.suffix + f".bak.{int(time.time())}"))
-    path.write_text(updated, encoding="utf-8")
-PY
-}
-
 ensure_path() {
   local shell_name
   local path_line='export PATH="$HOME/.local/bin:$PATH"'
@@ -269,8 +217,6 @@ data["surge_cli_path"] = os.environ["SURGE_CLI"]
 data["sing_box_launchd_label"] = "com.casper.surge-vless-bridge.sing-box"
 path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n")
 PY
-
-write_profile_markers "${SURGE_PROFILE_PATH}"
 
 INSTALL_CONFIG="${APP_DIR}/config.install.json"
 /usr/bin/python3 - <<'PY'
