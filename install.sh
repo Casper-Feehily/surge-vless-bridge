@@ -224,7 +224,7 @@ data["surge_profile_path"] = os.environ["SURGE_PROFILE_PATH"]
 data["sing_box_path"] = os.environ["SING_BOX"]
 data["sing_box_config_path"] = str(Path(os.environ["APP_DIR"]) / "sing-box.generated.json")
 data["surge_cli_path"] = os.environ["SURGE_CLI"]
-data["sing_box_launchd_label"] = "com.casper.surge-vless-bridge.sing-box"
+data["sing_box_launchd_label"] = "io.github.surge-vless-bridge.sing-box"
 path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n")
 PY
 
@@ -241,13 +241,13 @@ data["restart_sing_box"] = False
 target.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n")
 PY
 
-cat > "${AGENTS_DIR}/com.casper.surge-vless-bridge.sing-box.plist" <<PLIST
+cat > "${AGENTS_DIR}/io.github.surge-vless-bridge.sing-box.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
   <key>Label</key>
-  <string>com.casper.surge-vless-bridge.sing-box</string>
+  <string>io.github.surge-vless-bridge.sing-box</string>
   <key>ProgramArguments</key>
   <array>
     <string>${SING_BOX}</string>
@@ -267,13 +267,13 @@ cat > "${AGENTS_DIR}/com.casper.surge-vless-bridge.sing-box.plist" <<PLIST
 </plist>
 PLIST
 
-cat > "${AGENTS_DIR}/com.casper.surge-vless-bridge.sync.plist" <<PLIST
+cat > "${AGENTS_DIR}/io.github.surge-vless-bridge.sync.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
   <key>Label</key>
-  <string>com.casper.surge-vless-bridge.sync</string>
+  <string>io.github.surge-vless-bridge.sync</string>
   <key>ProgramArguments</key>
   <array>
     <string>/usr/bin/python3</string>
@@ -296,7 +296,7 @@ PLIST
 cat > "${BIN_DIR}/surge-vless-sync" <<SH
 #!/usr/bin/env bash
 set -euo pipefail
-LABEL="com.casper.surge-vless-bridge.sync"
+LABEL="io.github.surge-vless-bridge.sync"
 CONFIG="${APP_DIR}/config.json"
 if launchctl kickstart -k "gui/\$(id -u)/\${LABEL}" >/dev/null 2>&1; then
   echo "Sync triggered through LaunchAgent."
@@ -326,8 +326,8 @@ PY
 else
   echo "Last sync: never"
 fi
-launchctl print "gui/\$(id -u)/com.casper.surge-vless-bridge.sing-box" >/dev/null 2>&1 && echo "sing-box agent: loaded" || echo "sing-box agent: not loaded"
-launchctl print "gui/\$(id -u)/com.casper.surge-vless-bridge.sync" >/dev/null 2>&1 && echo "sync agent: loaded" || echo "sync agent: not loaded"
+launchctl print "gui/\$(id -u)/io.github.surge-vless-bridge.sing-box" >/dev/null 2>&1 && echo "sing-box agent: loaded" || echo "sing-box agent: not loaded"
+launchctl print "gui/\$(id -u)/io.github.surge-vless-bridge.sync" >/dev/null 2>&1 && echo "sync agent: loaded" || echo "sync agent: not loaded"
 SH
 chmod +x "${BIN_DIR}/surge-vless-status"
 ensure_path
@@ -337,10 +337,10 @@ msg first_sync
 /usr/bin/python3 "${APP_DIR}/surge_vless_bridge.py" -c "${INSTALL_CONFIG}"
 
 msg loading_agents
-launchctl bootout "gui/$(id -u)" "${AGENTS_DIR}/com.casper.surge-vless-bridge.sing-box.plist" >/dev/null 2>&1 || true
-launchctl bootout "gui/$(id -u)" "${AGENTS_DIR}/com.casper.surge-vless-bridge.sync.plist" >/dev/null 2>&1 || true
-launchctl bootstrap "gui/$(id -u)" "${AGENTS_DIR}/com.casper.surge-vless-bridge.sing-box.plist"
-launchctl bootstrap "gui/$(id -u)" "${AGENTS_DIR}/com.casper.surge-vless-bridge.sync.plist"
+launchctl bootout "gui/$(id -u)" "${AGENTS_DIR}/io.github.surge-vless-bridge.sing-box.plist" >/dev/null 2>&1 || true
+launchctl bootout "gui/$(id -u)" "${AGENTS_DIR}/io.github.surge-vless-bridge.sync.plist" >/dev/null 2>&1 || true
+launchctl bootstrap "gui/$(id -u)" "${AGENTS_DIR}/io.github.surge-vless-bridge.sing-box.plist"
+launchctl bootstrap "gui/$(id -u)" "${AGENTS_DIR}/io.github.surge-vless-bridge.sync.plist"
 
 msg done
 msg config

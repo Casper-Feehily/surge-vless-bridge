@@ -19,7 +19,7 @@
 ## 快速安装
 
 ```bash
-git clone https://github.com/Casper-Feehily/surge-vless-bridge.git
+git clone <repo-url>
 cd surge-vless-bridge
 bash install.sh
 ```
@@ -138,14 +138,14 @@ surge-vless-status
 重新加载 LaunchAgents：
 
 ```bash
-launchctl bootstrap gui/$(id -u) "$HOME/Library/LaunchAgents/com.casper.surge-vless-bridge.sing-box.plist"
-launchctl bootstrap gui/$(id -u) "$HOME/Library/LaunchAgents/com.casper.surge-vless-bridge.sync.plist"
+launchctl bootstrap gui/$(id -u) "$HOME/Library/LaunchAgents/io.github.surge-vless-bridge.sing-box.plist"
+launchctl bootstrap gui/$(id -u) "$HOME/Library/LaunchAgents/io.github.surge-vless-bridge.sync.plist"
 ```
 
 检查 sing-box：
 
 ```bash
-launchctl print gui/$(id -u)/com.casper.surge-vless-bridge.sing-box
+launchctl print gui/$(id -u)/io.github.surge-vless-bridge.sing-box
 curl --socks5-hostname 127.0.0.1:39000 https://www.gstatic.com/generate_204 -I
 ```
 

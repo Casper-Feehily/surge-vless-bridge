@@ -436,7 +436,7 @@ def validate_surge_profile(profile_text: str, config: dict) -> None:
 def restart_sing_box(config: dict, log_path: Path | None = None) -> None:
     if not config.get("restart_sing_box", True):
         return
-    label = config.get("sing_box_launchd_label", "com.casper.sing-box-vless")
+    label = config.get("sing_box_launchd_label", "io.github.surge-vless-bridge.sing-box")
     result = run_command(["launchctl", "kickstart", "-k", f"gui/{os.getuid()}/{label}"], required=False)
     if result.returncode != 0:
         log(f"sing-box launchd kickstart skipped or failed: {result.stdout.strip()}", log_path)

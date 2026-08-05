@@ -7,11 +7,11 @@ AGENTS_DIR="${HOME}/Library/LaunchAgents"
 BIN_DIR="${HOME}/.local/bin"
 UID_VALUE="$(id -u)"
 
-launchctl bootout "gui/${UID_VALUE}" "${AGENTS_DIR}/com.casper.surge-vless-bridge.sing-box.plist" >/dev/null 2>&1 || true
-launchctl bootout "gui/${UID_VALUE}" "${AGENTS_DIR}/com.casper.surge-vless-bridge.sync.plist" >/dev/null 2>&1 || true
+launchctl bootout "gui/${UID_VALUE}" "${AGENTS_DIR}/io.github.surge-vless-bridge.sing-box.plist" >/dev/null 2>&1 || true
+launchctl bootout "gui/${UID_VALUE}" "${AGENTS_DIR}/io.github.surge-vless-bridge.sync.plist" >/dev/null 2>&1 || true
 
-rm -f "${AGENTS_DIR}/com.casper.surge-vless-bridge.sing-box.plist"
-rm -f "${AGENTS_DIR}/com.casper.surge-vless-bridge.sync.plist"
+rm -f "${AGENTS_DIR}/io.github.surge-vless-bridge.sing-box.plist"
+rm -f "${AGENTS_DIR}/io.github.surge-vless-bridge.sync.plist"
 rm -f "${BIN_DIR}/surge-vless-sync"
 rm -f "${BIN_DIR}/surge-vless-status"
 

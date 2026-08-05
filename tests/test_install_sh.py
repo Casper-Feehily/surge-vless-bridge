@@ -48,7 +48,7 @@ def test_noninteractive_install_creates_expected_files():
         config = json.loads((app_dir / "config.json").read_text(encoding="utf-8"))
         assert config["subscription_url"] == str(sub)
         assert config["surge_profile_path"] == str(profile)
-        assert config["sing_box_launchd_label"] == "com.casper.surge-vless-bridge.sing-box"
+        assert config["sing_box_launchd_label"] == "io.github.surge-vless-bridge.sing-box"
         assert not (app_dir / "config.install.json").exists()
         assert (app_dir / "sing-box.generated.json").exists()
         assert (app_dir / "state.json").exists()
@@ -59,7 +59,7 @@ def test_noninteractive_install_creates_expected_files():
         assert "Node = socks5, 127.0.0.1, 39000, udp-relay=true" in profile_text
         assert "VLESS = select, Node" in profile_text
 
-        sync_plist = home / "Library/LaunchAgents/com.casper.surge-vless-bridge.sync.plist"
+        sync_plist = home / "Library/LaunchAgents/io.github.surge-vless-bridge.sync.plist"
         assert "<integer>1800</integer>" in sync_plist.read_text(encoding="utf-8")
         shortcut = home / ".local/bin/surge-vless-sync"
         status_cmd = home / ".local/bin/surge-vless-status"
@@ -123,8 +123,8 @@ def test_uninstall_removes_installed_files():
         shortcut.parent.mkdir(parents=True)
         write_executable(bin_dir / "launchctl", "#!/usr/bin/env bash\nexit 0\n")
         (app_dir / "config.json").write_text("{}", encoding="utf-8")
-        (agents_dir / "com.casper.surge-vless-bridge.sing-box.plist").write_text("plist", encoding="utf-8")
-        (agents_dir / "com.casper.surge-vless-bridge.sync.plist").write_text("plist", encoding="utf-8")
+        (agents_dir / "io.github.surge-vless-bridge.sing-box.plist").write_text("plist", encoding="utf-8")
+        (agents_dir / "io.github.surge-vless-bridge.sync.plist").write_text("plist", encoding="utf-8")
         write_executable(shortcut, "#!/usr/bin/env bash\nexit 0\n")
         write_executable(status_cmd, "#!/usr/bin/env bash\nexit 0\n")
 
@@ -134,8 +134,8 @@ def test_uninstall_removes_installed_files():
         assert not app_dir.exists()
         assert not shortcut.exists()
         assert not status_cmd.exists()
-        assert not (agents_dir / "com.casper.surge-vless-bridge.sing-box.plist").exists()
-        assert not (agents_dir / "com.casper.surge-vless-bridge.sync.plist").exists()
+        assert not (agents_dir / "io.github.surge-vless-bridge.sing-box.plist").exists()
+        assert not (agents_dir / "io.github.surge-vless-bridge.sync.plist").exists()
 
 
 def test_uninstall_can_keep_config():

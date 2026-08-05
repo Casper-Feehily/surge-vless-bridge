@@ -16,7 +16,7 @@
   "name_strip_patterns": [],
   "sing_box_path": "/opt/homebrew/bin/sing-box",
   "surge_cli_path": "/Applications/Surge.app/Contents/Applications/surge-cli",
-  "sing_box_launchd_label": "com.casper.surge-vless-bridge.sing-box",
+  "sing_box_launchd_label": "io.github.surge-vless-bridge.sing-box",
   "check_port_conflicts": false,
   "restart_sing_box": true,
   "reload_surge": true
