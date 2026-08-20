@@ -134,6 +134,16 @@ surge-vless-sync
 surge-vless-status
 ```
 
+## 升级
+
+无需卸载或重新填写订阅。进入克隆的仓库后直接运行：
+
+```bash
+bash update.sh
+```
+
+它会先用最新代码进行 dry-run 校验；通过后保留原配置、自动把旧的 `subscription_url` 迁移为 `subscription_urls`、备份配置，并重启同步。默认会执行 `git pull --ff-only`；离线或测试时可设 `SKIP_GIT_PULL=1`。
+
 重新加载 LaunchAgents：
 
 ```bash
@@ -194,7 +204,9 @@ Surge 仍然负责规则匹配、策略组、Dashboard 和 reload。`sing-box` �
 ```bash
 /usr/bin/python3 tests/test_surge_vless_bridge.py
 /usr/bin/python3 tests/test_install_sh.py
+/usr/bin/python3 tests/test_update_sh.py
 /usr/bin/python3 -m py_compile surge_vless_bridge.py tests/test_surge_vless_bridge.py
 bash -n install.sh
 bash -n uninstall.sh
+bash -n update.sh
 ```

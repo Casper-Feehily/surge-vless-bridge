@@ -133,6 +133,16 @@ Check status:
 surge-vless-status
 ```
 
+## Update
+
+You do not need to uninstall or re-enter subscriptions. From the cloned repository, run:
+
+```bash
+bash update.sh
+```
+
+It validates with the latest code first, then preserves the existing configuration, migrates legacy `subscription_url` to `subscription_urls`, creates a config backup, and triggers a sync. It runs `git pull --ff-only` by default; use `SKIP_GIT_PULL=1` when offline or testing.
+
 Reload LaunchAgents:
 
 ```bash
@@ -193,7 +203,9 @@ The parser maps common VLESS URI parameters to sing-box:
 ```bash
 /usr/bin/python3 tests/test_surge_vless_bridge.py
 /usr/bin/python3 tests/test_install_sh.py
+/usr/bin/python3 tests/test_update_sh.py
 /usr/bin/python3 -m py_compile surge_vless_bridge.py tests/test_surge_vless_bridge.py
 bash -n install.sh
 bash -n uninstall.sh
+bash -n update.sh
 ```
