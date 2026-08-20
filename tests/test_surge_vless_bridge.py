@@ -55,6 +55,19 @@ def test_parse_plain_vless_list():
     assert cfg["outbounds"][2]["transport"]["service_name"] == "mygrpc"
 
 
+def test_parse_multiple_subscriptions_uses_one_port_range_and_dedupes_names():
+    with tempfile.TemporaryDirectory() as td:
+        root = Path(td)
+        first = root / "first.txt"
+        second = root / "second.txt"
+        first.write_text("vless://u1@first.example.com:443?security=none&type=tcp#Node", encoding="utf-8")
+        second.write_text("vless://u2@second.example.com:443?security=none&type=tcp#Node", encoding="utf-8")
+        nodes = bridge.parse_subscriptions([str(first), str(second)], BASE_CONFIG)
+        cfg = bridge.build_sing_box(nodes, BASE_CONFIG)
+        assert [node.name for node in nodes] == ["Node", "Node 2"]
+        assert [inbound["listen_port"] for inbound in cfg["inbounds"]] == [39000, 39001]
+
+
 def test_parse_httpupgrade_and_quic_transports():
     raw = "\n".join([
         "vless://u1@hu.example.com:443?security=tls&type=httpupgrade&host=cdn.example.com&path=%2Fup#HTTPUpgrade",
@@ -146,6 +159,38 @@ def test_sync_creates_missing_surge_sections_and_markers():
         assert bridge.DEFAULT_GROUP_BEGIN in updated
         assert "Node = socks5, 127.0.0.1, 39000, udp-relay=true" in updated
         assert "VLESS = select, Node" in updated
+
+
+def test_sync_accepts_subscription_urls_and_legacy_subscription_url():
+    with tempfile.TemporaryDirectory() as td:
+        root = Path(td)
+        first = root / "first.txt"
+        second = root / "second.txt"
+        profile = root / "surge.conf"
+        first.write_text("vless://u1@first.example.com:443?security=none&type=tcp#First", encoding="utf-8")
+        second.write_text("vless://u2@second.example.com:443?security=none&type=tcp#Second", encoding="utf-8")
+        profile.write_text("[Proxy]\n[Proxy Group]\n", encoding="utf-8")
+        cfg = {
+            **BASE_CONFIG,
+            "subscription_urls": [str(first), str(second)],
+            "surge_profile_path": str(profile),
+            "sing_box_config_path": str(root / "sing-box.json"),
+            "sing_box_path": str(root / "missing-sing-box"),
+            "surge_cli_path": str(root / "missing-surge-cli"),
+            "restart_sing_box": False,
+            "reload_surge": False,
+            "log_path": str(root / "sync.log"),
+            "state_path": str(root / "state.json"),
+        }
+        cfg_path = root / "config.json"
+        cfg_path.write_text(json.dumps(cfg), encoding="utf-8")
+        assert bridge.sync(cfg_path) == 0
+        assert "First = socks5, 127.0.0.1, 39000" in profile.read_text(encoding="utf-8")
+        assert "Second = socks5, 127.0.0.1, 39001" in profile.read_text(encoding="utf-8")
+        legacy = {**cfg, "subscription_url": str(first)}
+        legacy.pop("subscription_urls")
+        cfg_path.write_text(json.dumps(legacy), encoding="utf-8")
+        assert bridge.load_config(cfg_path)["subscription_urls"] == [str(first)]
 
 
 def test_dry_run_full_flow_file_subscription():

@@ -6,7 +6,7 @@ The tool keeps Surge as the rule and policy control plane. sing-box handles the 
 
 ## Features
 
-- Supports raw VLESS subscriptions from any provider.
+- Supports combining multiple raw VLESS subscriptions from any provider.
 - Accepts base64 subscriptions or plain text files/lists containing `vless://` links.
 - Generates one sing-box inbound/outbound pair per node.
 - Updates only marked blocks in a Surge profile.
@@ -31,7 +31,7 @@ bash install.sh
 - asks for your Surge profile path
 - creates `[Proxy]` or `[Proxy Group]` sections when missing
 - ensures the managed marker pairs exist in the Surge profile
-- asks for your VLESS subscription URL
+- asks for VLESS subscription URLs one per line, then starts when you submit a blank line
 - asks how often to refresh the subscription, in hours
 - installs the `surge-vless-sync` and `surge-vless-status` shortcut commands. zsh, bash, and fish are configured automatically; other shells ask for the home path and startup file path, then update it directly
 - writes `~/Library/Application Support/surge-vless-bridge/config.json`
@@ -41,19 +41,19 @@ bash install.sh
 
 ```bash
 SURGE_PROFILE_PATH="$HOME/Library/Application Support/Surge/Profiles/Main.conf" \
-SUBSCRIPTION_URL="https://example.com/subscription" \
+SUBSCRIPTION_URLS=$'https://example.com/subscription-one\nhttps://example.com/subscription-two' \
 SYNC_INTERVAL_HOURS="6" \
 INSTALL_LANG="en" \
 bash install.sh
 ```
 
-`SYNC_INTERVAL_HOURS` must be a positive number and may be decimal, for example `0.5` for 30 minutes. When omitted, the installer refreshes every 1 hour. Set `INSTALL_LANG` to `zh` or `en` to skip the language prompt.
+`SUBSCRIPTION_URLS` accepts one URL per line; the legacy single-URL `SUBSCRIPTION_URL` remains supported. `SYNC_INTERVAL_HOURS` must be a positive number and may be decimal, for example `0.5` for 30 minutes. When omitted, the installer refreshes every 1 hour. Set `INSTALL_LANG` to `zh` or `en` to skip the language prompt.
 
 If your shell is not zsh, bash, or fish, set `COMMAND_HOME=/Users/yourname` and `COMMAND_RC_PATH=/Users/yourname/.profile` to skip the shortcut install prompts.
 
 ## Security note
 
-VLESS subscription URLs usually contain account credentials. Do not commit a real `subscription_url` to GitHub. The installer writes the real config to `~/Library/Application Support/surge-vless-bridge/config.json`, and the repo `.gitignore` ignores local `config.json` to prevent accidental commits.
+VLESS subscription URLs usually contain account credentials. Do not commit real `subscription_urls` to GitHub. The installer writes the real config to `~/Library/Application Support/surge-vless-bridge/config.json`, and the repo `.gitignore` ignores local `config.json` to prevent accidental commits.
 
 ## Surge profile markers
 

@@ -45,7 +45,8 @@ msg() {
   local key="$1"
   case "${INSTALL_LANG}:${key}" in
     zh:surge_profile_path) printf "%s\n" "Surge profile 路径" ;;
-    zh:subscription_url) printf "%s\n" "VLESS 节点订阅链接" ;;
+    zh:subscription_url) printf "%s\n" "VLESS 节点订阅链接（每行一个，留空结束）" ;;
+    zh:subscription_required) printf "%s\n" "至少需要输入一个订阅链接。" ;;
     zh:refresh_interval) printf "%s\n" "订阅刷新间隔（小时）" ;;
     zh:command_home) printf "%s\n" "快捷命令安装用的 home 路径" ;;
     zh:command_rc_file) printf "%s\n" "当前 shell 的启动配置文件路径" ;;
@@ -70,7 +71,8 @@ msg() {
     zh:markers_done) printf "Surge profile marker 已写入: %s\n" "${SURGE_PROFILE_PATH}" ;;
     *) case "${key}" in
       surge_profile_path) printf "%s\n" "Surge profile path" ;;
-      subscription_url) printf "%s\n" "VLESS node subscription URL" ;;
+      subscription_url) printf "%s\n" "VLESS node subscription URLs (one per line; blank line to finish)" ;;
+      subscription_required) printf "%s\n" "Enter at least one subscription URL." ;;
       refresh_interval) printf "%s\n" "Refresh interval in hours" ;;
       command_home) printf "%s\n" "Home path for shortcut commands" ;;
       command_rc_file) printf "%s\n" "Startup file path for your current shell" ;;
@@ -123,6 +125,23 @@ prompt_positive_number() {
       return
     fi
     msg positive_number >&2
+  done
+}
+
+prompt_subscription_urls() {
+  local url
+  local urls=()
+  while true; do
+    read -r -p "$(msg subscription_url): " url
+    if [[ -z "${url}" ]]; then
+      if (( ${#urls[@]} )); then
+        printf "%s\n" "${urls[@]}"
+        return
+      fi
+      msg subscription_required >&2
+    else
+      urls+=("${url}")
+    fi
   done
 }
 
@@ -216,7 +235,7 @@ if [[ ! -f "${SURGE_PROFILE_PATH}" ]]; then
   exit 1
 fi
 
-SUBSCRIPTION_URL="${SUBSCRIPTION_URL:-$(prompt_required "$(msg subscription_url)")}"
+SUBSCRIPTION_URLS="${SUBSCRIPTION_URLS:-${SUBSCRIPTION_URL:-$(prompt_subscription_urls)}}"
 SYNC_INTERVAL_HOURS="${SYNC_INTERVAL_HOURS:-$(prompt_positive_number "$(msg refresh_interval)" "1")}"
 if ! [[ "${SYNC_INTERVAL_HOURS}" =~ ^([0-9]+([.][0-9]+)?|[.][0-9]+)$ ]] || ! /usr/bin/python3 -c 'import sys; raise SystemExit(not (float(sys.argv[1]) > 0))' "${SYNC_INTERVAL_HOURS}"; then
   msg interval_invalid >&2
@@ -232,7 +251,7 @@ if [[ -f "${APP_DIR}/config.json" ]]; then
   cp "${APP_DIR}/config.json" "${APP_DIR}/config.json.bak.$(date +%s)"
 fi
 cp "${SRC_DIR}/config.example.json" "${APP_DIR}/config.json"
-export APP_DIR SING_BOX SURGE_CLI SURGE_PROFILE_PATH SUBSCRIPTION_URL
+export APP_DIR SING_BOX SURGE_CLI SURGE_PROFILE_PATH SUBSCRIPTION_URLS
 /usr/bin/python3 - <<'PY'
 import json
 import os
@@ -240,7 +259,8 @@ from pathlib import Path
 
 path = Path(os.environ["APP_DIR"]) / "config.json"
 data = json.loads(path.read_text())
-data["subscription_url"] = os.environ["SUBSCRIPTION_URL"]
+data.pop("subscription_url", None)
+data["subscription_urls"] = [url for url in os.environ["SUBSCRIPTION_URLS"].splitlines() if url]
 data["surge_profile_path"] = os.environ["SURGE_PROFILE_PATH"]
 data["sing_box_path"] = os.environ["SING_BOX"]
 data["sing_box_config_path"] = str(Path(os.environ["APP_DIR"]) / "sing-box.generated.json")

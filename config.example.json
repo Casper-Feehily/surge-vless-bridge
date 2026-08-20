@@ -1,5 +1,8 @@
 {
-  "subscription_url": "https://example.com/subscription-or-/path/to/plain-vless.txt",
+  "subscription_urls": [
+    "https://example.com/subscription-or-/path/to/plain-vless.txt",
+    "https://example.com/another-subscription"
+  ],
   "surge_profile_path": "/Users/you/Library/Application Support/Surge/Profiles/Main.conf",
   "sing_box_config_path": "/Users/you/Library/Application Support/surge-vless-bridge/sing-box.generated.json",
   "listen_host": "127.0.0.1",

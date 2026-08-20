@@ -21,10 +21,12 @@ def test_noninteractive_install_creates_expected_files():
         home = root / "home"
         bin_dir = root / "bin"
         sub = root / "sub.txt"
+        second_sub = root / "second-sub.txt"
         profile = root / "surge.conf"
         home.mkdir()
         bin_dir.mkdir()
         sub.write_text("vless://u@example.com:443?security=none&type=tcp#Node", encoding="utf-8")
+        second_sub.write_text("vless://u2@second.example.com:443?security=none&type=tcp#Second", encoding="utf-8")
         profile.write_text("[General]\nloglevel = notify\n", encoding="utf-8")
         write_executable(bin_dir / "sing-box", "#!/usr/bin/env bash\nexit 0\n")
         write_executable(bin_dir / "surge-cli", "#!/usr/bin/env bash\nexit 0\n")
@@ -38,7 +40,7 @@ def test_noninteractive_install_creates_expected_files():
             "INSTALL_LANG": "en",
             "SURGE_CLI_PATH": str(bin_dir / "surge-cli"),
             "SURGE_PROFILE_PATH": str(profile),
-            "SUBSCRIPTION_URL": str(sub),
+            "SUBSCRIPTION_URLS": f"{sub}\n{second_sub}",
             "SYNC_INTERVAL_HOURS": "0.5",
         }
         result = subprocess.run(["bash", "install.sh"], cwd=ROOT, env=env, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
@@ -46,7 +48,7 @@ def test_noninteractive_install_creates_expected_files():
 
         app_dir = home / "Library/Application Support/surge-vless-bridge"
         config = json.loads((app_dir / "config.json").read_text(encoding="utf-8"))
-        assert config["subscription_url"] == str(sub)
+        assert config["subscription_urls"] == [str(sub), str(second_sub)]
         assert config["surge_profile_path"] == str(profile)
         assert config["sing_box_launchd_label"] == "io.github.surge-vless-bridge.sing-box"
         assert not (app_dir / "config.install.json").exists()
@@ -57,7 +59,7 @@ def test_noninteractive_install_creates_expected_files():
         assert "[Proxy]" in profile_text
         assert "[Proxy Group]" in profile_text
         assert "Node = socks5, 127.0.0.1, 39000, udp-relay=true" in profile_text
-        assert "VLESS = select, Node" in profile_text
+        assert "VLESS = select, Node, Second" in profile_text
 
         sync_plist = home / "Library/LaunchAgents/io.github.surge-vless-bridge.sync.plist"
         assert "<integer>1800</integer>" in sync_plist.read_text(encoding="utf-8")
@@ -70,7 +72,7 @@ def test_noninteractive_install_creates_expected_files():
         status = subprocess.run([str(status_cmd)], env=env, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
         assert status.returncode == 0, status.stdout
         assert "Config:" in status.stdout
-        assert "Nodes: 1" in status.stdout
+        assert "Nodes: 2" in status.stdout
         assert 'export PATH="$HOME/.local/bin:$PATH"' in (home / ".zshrc").read_text(encoding="utf-8")
         assert "Sync command: surge-vless-sync" in result.stdout
         assert "Status command: surge-vless-status" in result.stdout
@@ -84,11 +86,13 @@ def test_unknown_shell_prompts_for_command_home():
         command_rc = command_home / ".customrc"
         bin_dir = root / "bin"
         sub = root / "sub.txt"
+        second_sub = root / "second-sub.txt"
         profile = root / "surge.conf"
         home.mkdir()
         command_home.mkdir()
         bin_dir.mkdir()
         sub.write_text("vless://u@example.com:443?security=none&type=tcp#Node", encoding="utf-8")
+        second_sub.write_text("vless://u2@second.example.com:443?security=none&type=tcp#Second", encoding="utf-8")
         profile.write_text("[General]\nloglevel = notify\n", encoding="utf-8")
         write_executable(bin_dir / "sing-box", "#!/usr/bin/env bash\nexit 0\n")
         write_executable(bin_dir / "surge-cli", "#!/usr/bin/env bash\nexit 0\n")
@@ -102,14 +106,15 @@ def test_unknown_shell_prompts_for_command_home():
             "INSTALL_LANG": "en",
             "SURGE_CLI_PATH": str(bin_dir / "surge-cli"),
             "SURGE_PROFILE_PATH": str(profile),
-            "SUBSCRIPTION_URL": str(sub),
             "SYNC_INTERVAL_HOURS": "1",
         }
-        result = subprocess.run(["bash", "install.sh"], cwd=ROOT, env=env, input=f"{command_home}\n{command_rc}\n", text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
+        result = subprocess.run(["bash", "install.sh"], cwd=ROOT, env=env, input=f"{command_home}\n{command_rc}\n{sub}\n{second_sub}\n\n", text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
         assert result.returncode == 0, result.stdout
         assert (command_home / ".local/bin/surge-vless-sync").exists()
         assert (command_home / ".local/bin/surge-vless-status").exists()
         assert f'export PATH="{command_home}/.local/bin:$PATH"' in command_rc.read_text(encoding="utf-8")
+        config = json.loads((home / "Library/Application Support/surge-vless-bridge/config.json").read_text(encoding="utf-8"))
+        assert config["subscription_urls"] == [str(sub), str(second_sub)]
         assert "Sync command: surge-vless-sync" in result.stdout
 
 
