@@ -1,7 +1,13 @@
 {
   "subscription_urls": [
-    "https://example.com/subscription-or-/path/to/plain-vless.txt",
-    "https://example.com/another-subscription"
+    {
+      "name": "Provider one",
+      "url": "https://example.com/subscription-or-/path/to/plain-vless.txt"
+    },
+    {
+      "name": "Provider two",
+      "url": "https://example.com/another-subscription"
+    }
   ],
   "surge_profile_path": "/Users/you/Library/Application Support/Surge/Profiles/Main.conf",
   "sing_box_config_path": "/Users/you/Library/Application Support/surge-vless-bridge/sing-box.generated.json",

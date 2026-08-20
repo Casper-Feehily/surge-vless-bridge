@@ -43,5 +43,13 @@ PY
 
 mv "${TEMP_BRIDGE}" "${APP_DIR}/surge_vless_bridge.py"
 TEMP_BRIDGE=""
+cp "${SRC_DIR}/manage_subscriptions.py" "${APP_DIR}/manage_subscriptions.py"
+chmod +x "${APP_DIR}/manage_subscriptions.py"
+mkdir -p "${HOME}/.local/bin"
+cat > "${HOME}/.local/bin/surge-vless-subscriptions" <<SH
+#!/usr/bin/env bash
+exec /usr/bin/python3 "${APP_DIR}/manage_subscriptions.py" "\$@"
+SH
+chmod +x "${HOME}/.local/bin/surge-vless-subscriptions"
 /usr/bin/python3 "${APP_DIR}/surge_vless_bridge.py" -c "${CONFIG}"
 echo "Updated ${APP_NAME}. Config backup: ${CONFIG_BACKUP}"

@@ -75,9 +75,17 @@ def load_config(path: Path) -> dict:
     subscription_urls = merged.get("subscription_urls")
     if subscription_urls is None:
         subscription_urls = [merged["subscription_url"]] if merged.get("subscription_url") else []
-    if not isinstance(subscription_urls, list) or not all(isinstance(url, str) and url.strip() for url in subscription_urls):
+    if not isinstance(subscription_urls, list):
         raise ValueError("subscription_urls must be a non-empty list of URLs or paths")
-    merged["subscription_urls"] = subscription_urls
+    urls = []
+    for item in subscription_urls:
+        url = item if isinstance(item, str) else item.get("url") if isinstance(item, dict) else None
+        if not isinstance(url, str) or not url.strip():
+            raise ValueError("subscription_urls must be a non-empty list of URLs or paths")
+        urls.append(url.strip())
+    if not urls:
+        raise ValueError("subscription_urls must be a non-empty list of URLs or paths")
+    merged["subscription_urls"] = urls
     required = ["surge_profile_path", "sing_box_config_path"]
     missing = [key for key in required if not merged.get(key)]
     if missing:

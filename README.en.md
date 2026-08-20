@@ -12,7 +12,7 @@ The tool keeps Surge as the rule and policy control plane. sing-box handles the 
 - Updates only marked blocks in a Surge profile.
 - Keeps old working config on fetch, parse, sing-box check, or Surge profile check failure.
 - Provides macOS LaunchAgent templates for sing-box keepalive and scheduled sync.
-- add surge-vless-sync and surge-vless-status shortcut commands.
+- adds `surge-vless-sync`, `surge-vless-status`, and interactive `surge-vless-subscriptions` shortcut commands.
 
 
 ## Quick install
@@ -33,7 +33,7 @@ bash install.sh
 - ensures the managed marker pairs exist in the Surge profile
 - asks for VLESS subscription URLs one per line, then starts when you submit a blank line
 - asks how often to refresh the subscription, in hours
-- installs the `surge-vless-sync` and `surge-vless-status` shortcut commands. zsh, bash, and fish are configured automatically; other shells ask for the home path and startup file path, then update it directly
+- installs the `surge-vless-sync`, `surge-vless-status`, and `surge-vless-subscriptions` shortcut commands. zsh, bash, and fish are configured automatically; other shells ask for the home path and startup file path, then update it directly
 - writes `~/Library/Application Support/surge-vless-bridge/config.json`
 - runs the first sync and loads the LaunchAgents
 
@@ -123,6 +123,14 @@ Sync once now:
 surge-vless-sync
 ```
 
+Add or remove subscriptions:
+
+```bash
+surge-vless-subscriptions
+```
+
+Choose `a` to add, `d` to delete, or `s` to save and sync. Adding asks for a name and URL, and the list shows names. A dry run validates changes before the configuration is written.
+
 The installer adds `~/.local/bin` to the current shell startup file: `~/.zshrc` for zsh, `~/.bashrc` and `~/.bash_profile` for bash, or `~/.config/fish/config.fish` for fish. Restart the terminal after install to use the short command directly.
 
 If the current shell is not zsh, bash, or fish, the installer asks for the home path and startup file path, then updates PATH directly. Restart the terminal after install to use `surge-vless-sync`.
@@ -204,6 +212,7 @@ The parser maps common VLESS URI parameters to sing-box:
 /usr/bin/python3 tests/test_surge_vless_bridge.py
 /usr/bin/python3 tests/test_install_sh.py
 /usr/bin/python3 tests/test_update_sh.py
+/usr/bin/python3 tests/test_manage_subscriptions.py
 /usr/bin/python3 -m py_compile surge_vless_bridge.py tests/test_surge_vless_bridge.py
 bash -n install.sh
 bash -n uninstall.sh

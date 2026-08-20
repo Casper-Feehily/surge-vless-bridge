@@ -14,7 +14,7 @@
 - 只更新 Surge profile 中被 marker 包住的托管区块。
 - 订阅获取、解析、sing-box 检查或 Surge profile 检查失败时，会保留旧的可用配置。
 - 提供 macOS LaunchAgent，用于 sing-box keepalive 和定时同步。
-- 创建surge-vless-status和surge-vless-sync命令用于查看订阅状态和更新订阅。
+- 创建 `surge-vless-status`、`surge-vless-sync` 和交互式的 `surge-vless-subscriptions` 命令。
 
 ## 快速安装
 
@@ -34,7 +34,7 @@ bash install.sh
 - 在 Surge profile 中补齐托管 marker。
 - 逐行询问 VLESS 节点订阅链接，留空后开始安装。
 - 询问订阅刷新间隔，单位是小时，支持小数。
-- 安装 `surge-vless-sync` 和 `surge-vless-status` 快捷命令。zsh、bash、fish 会自动配置；其他 shell 会询问 home 路径和启动配置文件路径后直接写入。
+- 安装 `surge-vless-sync`、`surge-vless-status` 和 `surge-vless-subscriptions` 快捷命令。zsh、bash、fish 会自动配置；其他 shell 会询问 home 路径和启动配置文件路径后直接写入。
 - 写入 `~/Library/Application Support/surge-vless-bridge/config.json`。
 - 执行首次同步并加载 LaunchAgents。
 
@@ -124,6 +124,14 @@ vless://uuid@example.com:443?...#My%20Node
 surge-vless-sync
 ```
 
+添加或删除订阅：
+
+```bash
+surge-vless-subscriptions
+```
+
+按提示输入 `a` 添加、`d` 删除、`s` 保存并同步；添加时会要求输入名称和链接，列表会按名称展示。保存前会 dry-run 校验，失败不会修改配置。
+
 安装脚本会按当前 shell 把 `~/.local/bin` 加到启动配置：zsh 写入 `~/.zshrc`，bash 写入 `~/.bashrc` 和 `~/.bash_profile`，fish 写入 `~/.config/fish/config.fish`。安装后重开终端即可直接使用短命令。
 
 如果当前 shell 不是 zsh、bash 或 fish，安装脚本会询问 home 路径和启动配置文件路径，然后直接写入 PATH。安装后重开终端即可使用 `surge-vless-sync`。
@@ -205,6 +213,7 @@ Surge 仍然负责规则匹配、策略组、Dashboard 和 reload。`sing-box` �
 /usr/bin/python3 tests/test_surge_vless_bridge.py
 /usr/bin/python3 tests/test_install_sh.py
 /usr/bin/python3 tests/test_update_sh.py
+/usr/bin/python3 tests/test_manage_subscriptions.py
 /usr/bin/python3 -m py_compile surge_vless_bridge.py tests/test_surge_vless_bridge.py
 bash -n install.sh
 bash -n uninstall.sh

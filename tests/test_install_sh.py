@@ -65,10 +65,13 @@ def test_noninteractive_install_creates_expected_files():
         assert "<integer>1800</integer>" in sync_plist.read_text(encoding="utf-8")
         shortcut = home / ".local/bin/surge-vless-sync"
         status_cmd = home / ".local/bin/surge-vless-status"
+        subscriptions_cmd = home / ".local/bin/surge-vless-subscriptions"
         assert shortcut.exists()
         assert os.access(shortcut, os.X_OK)
         assert status_cmd.exists()
         assert os.access(status_cmd, os.X_OK)
+        assert subscriptions_cmd.exists()
+        assert os.access(subscriptions_cmd, os.X_OK)
         status = subprocess.run([str(status_cmd)], env=env, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
         assert status.returncode == 0, status.stdout
         assert "Config:" in status.stdout
@@ -112,6 +115,7 @@ def test_unknown_shell_prompts_for_command_home():
         assert result.returncode == 0, result.stdout
         assert (command_home / ".local/bin/surge-vless-sync").exists()
         assert (command_home / ".local/bin/surge-vless-status").exists()
+        assert (command_home / ".local/bin/surge-vless-subscriptions").exists()
         assert f'export PATH="{command_home}/.local/bin:$PATH"' in command_rc.read_text(encoding="utf-8")
         config = json.loads((home / "Library/Application Support/surge-vless-bridge/config.json").read_text(encoding="utf-8"))
         assert config["subscription_urls"] == [str(sub), str(second_sub)]
@@ -158,6 +162,7 @@ def test_uninstall_removes_installed_files():
         agents_dir = home / "Library/LaunchAgents"
         shortcut = home / ".local/bin/surge-vless-sync"
         status_cmd = home / ".local/bin/surge-vless-status"
+        subscriptions_cmd = home / ".local/bin/surge-vless-subscriptions"
         home.mkdir()
         bin_dir.mkdir()
         app_dir.mkdir(parents=True)
@@ -169,6 +174,7 @@ def test_uninstall_removes_installed_files():
         (agents_dir / "io.github.surge-vless-bridge.sync.plist").write_text("plist", encoding="utf-8")
         write_executable(shortcut, "#!/usr/bin/env bash\nexit 0\n")
         write_executable(status_cmd, "#!/usr/bin/env bash\nexit 0\n")
+        write_executable(subscriptions_cmd, "#!/usr/bin/env bash\nexit 0\n")
 
         env = {**os.environ, "HOME": str(home), "PATH": f"{bin_dir}:/usr/bin:/bin"}
         result = subprocess.run(["bash", "uninstall.sh"], cwd=ROOT, env=env, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False)
@@ -176,6 +182,7 @@ def test_uninstall_removes_installed_files():
         assert not app_dir.exists()
         assert not shortcut.exists()
         assert not status_cmd.exists()
+        assert not subscriptions_cmd.exists()
         assert not (agents_dir / "io.github.surge-vless-bridge.sing-box.plist").exists()
         assert not (agents_dir / "io.github.surge-vless-bridge.sync.plist").exists()
 

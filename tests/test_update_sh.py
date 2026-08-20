@@ -47,6 +47,8 @@ def test_update_preserves_config_and_migrates_single_subscription():
         assert "subscription_url" not in updated
         assert list(app_dir.glob("config.json.bak.*"))
         assert (app_dir / "surge_vless_bridge.py").read_text(encoding="utf-8") == (ROOT / "surge_vless_bridge.py").read_text(encoding="utf-8")
+        assert (app_dir / "manage_subscriptions.py").exists()
+        assert (home / ".local/bin/surge-vless-subscriptions").exists()
         assert (app_dir / "sing-box.generated.json").exists()
 
 

@@ -66,6 +66,7 @@ msg() {
     zh:config) printf "配置文件: %s\n" "${APP_DIR}/config.json" ;;
     zh:sync_command) printf "%s\n" "同步命令: surge-vless-sync" ;;
     zh:status_command) printf "%s\n" "状态命令: surge-vless-status" ;;
+    zh:subscriptions_command) printf "%s\n" "订阅管理命令: surge-vless-subscriptions" ;;
     zh:restart_terminal) printf "%s\n" "重启终端后即可使用这个短命令。" ;;
     zh:refresh_result) printf "刷新间隔: 每 %s 小时\n" "${SYNC_INTERVAL_HOURS}" ;;
     zh:markers_done) printf "Surge profile marker 已写入: %s\n" "${SURGE_PROFILE_PATH}" ;;
@@ -92,6 +93,7 @@ msg() {
       config) printf "Config: %s\n" "${APP_DIR}/config.json" ;;
       sync_command) printf "%s\n" "Sync command: surge-vless-sync" ;;
       status_command) printf "%s\n" "Status command: surge-vless-status" ;;
+      subscriptions_command) printf "%s\n" "Subscription manager: surge-vless-subscriptions" ;;
       restart_terminal) printf "%s\n" "Restart your terminal before using the short sync command." ;;
       refresh_result) printf "Refresh interval: every %s hour(s)\n" "${SYNC_INTERVAL_HOURS}" ;;
       markers_done) printf "Surge profile markers ensured in: %s\n" "${SURGE_PROFILE_PATH}" ;;
@@ -245,7 +247,9 @@ SYNC_INTERVAL_SECONDS="$(/usr/bin/python3 -c 'import math, sys; print(max(1, mat
 
 mkdir -p "${APP_DIR}/logs" "${AGENTS_DIR}" "${BIN_DIR}"
 cp "${SRC_DIR}/surge_vless_bridge.py" "${APP_DIR}/surge_vless_bridge.py"
+cp "${SRC_DIR}/manage_subscriptions.py" "${APP_DIR}/manage_subscriptions.py"
 chmod +x "${APP_DIR}/surge_vless_bridge.py"
+chmod +x "${APP_DIR}/manage_subscriptions.py"
 
 if [[ -f "${APP_DIR}/config.json" ]]; then
   cp "${APP_DIR}/config.json" "${APP_DIR}/config.json.bak.$(date +%s)"
@@ -371,6 +375,12 @@ launchctl print "gui/\$(id -u)/io.github.surge-vless-bridge.sing-box" >/dev/null
 launchctl print "gui/\$(id -u)/io.github.surge-vless-bridge.sync" >/dev/null 2>&1 && echo "sync agent: loaded" || echo "sync agent: not loaded"
 SH
 chmod +x "${BIN_DIR}/surge-vless-status"
+
+cat > "${BIN_DIR}/surge-vless-subscriptions" <<SH
+#!/usr/bin/env bash
+exec /usr/bin/python3 "${APP_DIR}/manage_subscriptions.py" "\$@"
+SH
+chmod +x "${BIN_DIR}/surge-vless-subscriptions"
 ensure_path
 
 msg installed
@@ -387,6 +397,7 @@ msg done
 msg config
 msg sync_command
 msg status_command
+msg subscriptions_command
 msg restart_terminal
 msg refresh_result
 msg markers_done
