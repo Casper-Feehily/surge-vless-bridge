@@ -72,7 +72,13 @@ def load_config(path: Path) -> dict:
         "state_path": str(base / "state.json"),
     }
     merged = {**defaults, **config}
-    required = ["subscription_url", "surge_profile_path", "sing_box_config_path"]
+    subscription_urls = merged.get("subscription_urls")
+    if subscription_urls is None:
+        subscription_urls = [merged["subscription_url"]] if merged.get("subscription_url") else []
+    if not isinstance(subscription_urls, list) or not all(isinstance(url, str) and url.strip() for url in subscription_urls):
+        raise ValueError("subscription_urls must be a non-empty list of URLs or paths")
+    merged["subscription_urls"] = subscription_urls
+    required = ["surge_profile_path", "sing_box_config_path"]
     missing = [key for key in required if not merged.get(key)]
     if missing:
         raise ValueError(f"missing required config keys: {', '.join(missing)}")
@@ -174,6 +180,22 @@ def parse_nodes(text: str, config: dict | None = None) -> list[Node]:
     uris = extract_vless_uris(text)
     if not uris:
         raise ValueError("subscription contains no vless:// nodes")
+    nodes = []
+    for index, uri in enumerate(uris, start=1):
+        try:
+            nodes.append(parse_vless_uri(uri, index, config))
+        except Exception as exc:
+            raise ValueError(f"failed to parse node {index}: {exc}") from exc
+    return dedupe_names(nodes)
+
+
+def parse_subscriptions(urls: list[str], config: dict) -> list[Node]:
+    uris: list[str] = []
+    for source_index, url in enumerate(urls, start=1):
+        source_uris = extract_vless_uris(fetch_subscription(url))
+        if not source_uris:
+            raise ValueError(f"subscription {source_index} contains no vless:// nodes")
+        uris.extend(source_uris)
     nodes = []
     for index, uri in enumerate(uris, start=1):
         try:
@@ -467,7 +489,7 @@ def sync(config_path: Path, dry_run: bool = False) -> int:
     config = load_config(config_path)
     log_path = Path(config["log_path"])
     try:
-        nodes = parse_nodes(fetch_subscription(config["subscription_url"]), config)
+        nodes = parse_subscriptions(config["subscription_urls"], config)
         if config.get("check_port_conflicts", False):
             check_ports_free(config["listen_host"], int(config["start_port"]), len(nodes))
         sing_box_config = build_sing_box(nodes, config)

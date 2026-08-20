@@ -8,7 +8,7 @@
 
 ## 功能
 
-- 支持任意服务商的原始 VLESS 订阅。
+- 支持同时合并任意服务商的多个原始 VLESS 订阅。
 - 支持 base64 订阅，也支持包含 `vless://` 链接的纯文本文件或列表。
 - 为每个节点生成一组 sing-box inbound/outbound。
 - 只更新 Surge profile 中被 marker 包住的托管区块。
@@ -32,7 +32,7 @@ bash install.sh
 - 询问 Surge profile 路径。
 - 缺少 `[Proxy]` 或 `[Proxy Group]` 时自动创建。
 - 在 Surge profile 中补齐托管 marker。
-- 询问 VLESS 节点订阅链接。
+- 逐行询问 VLESS 节点订阅链接，留空后开始安装。
 - 询问订阅刷新间隔，单位是小时，支持小数。
 - 安装 `surge-vless-sync` 和 `surge-vless-status` 快捷命令。zsh、bash、fish 会自动配置；其他 shell 会询问 home 路径和启动配置文件路径后直接写入。
 - 写入 `~/Library/Application Support/surge-vless-bridge/config.json`。
@@ -42,19 +42,19 @@ bash install.sh
 
 ```bash
 SURGE_PROFILE_PATH="$HOME/Library/Application Support/Surge/Profiles/Main.conf" \
-SUBSCRIPTION_URL="https://example.com/subscription" \
+SUBSCRIPTION_URLS=$'https://example.com/subscription-one\nhttps://example.com/subscription-two' \
 SYNC_INTERVAL_HOURS="6" \
 INSTALL_LANG="zh" \
 bash install.sh
 ```
 
-`SYNC_INTERVAL_HOURS` 必须是正数，支持小数，例如 `0.5` 表示 30 分钟。未设置时，安装脚本默认每 1 小时刷新一次订阅。`INSTALL_LANG` 可设为 `zh` 或 `en`，用于跳过语言选择。
+`SUBSCRIPTION_URLS` 每行一个链接；旧的单链接变量 `SUBSCRIPTION_URL` 仍可使用。`SYNC_INTERVAL_HOURS` 必须是正数，支持小数，例如 `0.5` 表示 30 分钟。未设置时，安装脚本默认每 1 小时刷新一次订阅。`INSTALL_LANG` 可设为 `zh` 或 `en`，用于跳过语言选择。
 
 如果你的 shell 不是 zsh、bash 或 fish，可以额外设置 `COMMAND_HOME=/Users/yourname` 和 `COMMAND_RC_PATH=/Users/yourname/.profile` 来跳过快捷命令安装路径提问。
 
 ## 安全提醒
 
-VLESS 订阅链接通常包含账号凭据。不要把真实的 `subscription_url` 提交到 GitHub。安装脚本会把真实配置写到 `~/Library/Application Support/surge-vless-bridge/config.json`，仓库里的 `.gitignore` 也会忽略本地 `config.json`，避免误提交。
+VLESS 订阅链接通常包含账号凭据。不要把真实的 `subscription_urls` 提交到 GitHub。安装脚本会把真实配置写到 `~/Library/Application Support/surge-vless-bridge/config.json`，仓库里的 `.gitignore` 也会忽略本地 `config.json`，避免误提交。
 
 ## Surge profile marker
 
