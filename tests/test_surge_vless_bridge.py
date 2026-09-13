@@ -29,6 +29,7 @@ BASE_CONFIG = {
 def make_sub(lines):
     return base64.b64encode("\n".join(lines).encode()).decode()
 
+#! 检查是否是base64编码
 
 def test_parse_base64_reality_tcp():
     raw = make_sub([
