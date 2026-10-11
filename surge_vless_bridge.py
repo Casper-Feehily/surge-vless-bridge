@@ -392,6 +392,23 @@ def ensure_profile_markers(text: str, config: dict) -> str:
     return ensure_markers(text, "Proxy Group", config["group_marker_begin"], config["group_marker_end"])
 
 
+def ensure_sing_box_direct_rule(text: str) -> str:
+    """Keep sing-box egress from being proxied back into its own SOCKS port."""
+    text = ensure_section(text, "Rule")
+    lines = text.splitlines()
+    header = next(i for i, line in enumerate(lines) if line.strip() == "[Rule]")
+    end = next(
+        (i for i in range(header + 1, len(lines))
+         if re.fullmatch(r"\[[^\]]+\]", lines[i].strip())),
+        len(lines),
+    )
+    # Move an existing equivalent rule to the front rather than duplicating it.
+    direct_rule = re.compile(r"\s*PROCESS-NAME\s*,\s*sing-box\s*,\s*DIRECT\s*")
+    rules = [line for line in lines[header + 1:end] if not direct_rule.fullmatch(line)]
+    lines[header + 1:end] = ["PROCESS-NAME,sing-box,DIRECT", *rules]
+    return "\n".join(lines) + "\n"
+
+
 def replace_between(text: str, begin: str, end: str, body: str) -> str:
     pattern = re.compile(rf"({re.escape(begin)})(.*?)(\n{re.escape(end)})", re.S)
     if not pattern.search(text):
@@ -508,6 +525,7 @@ def sync(config_path: Path, dry_run: bool = False) -> int:
         profile_text = ensure_profile_markers(profile_text, config)
         profile_text = replace_between(profile_text, *marker_pair(config, "proxy", profile_text), proxy_block)
         profile_text = replace_between(profile_text, *marker_pair(config, "group", profile_text), group_block)
+        profile_text = ensure_sing_box_direct_rule(profile_text)
         validate_surge_profile(profile_text, config)
         if dry_run:
             log(f"dry run OK: {len(nodes)} nodes", log_path)

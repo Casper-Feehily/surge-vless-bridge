@@ -11,7 +11,7 @@
 - 支持同时合并任意服务商的多个原始 VLESS 订阅。
 - 支持 base64 订阅，也支持包含 `vless://` 链接的纯文本文件或列表。
 - 为每个节点生成一组 sing-box inbound/outbound。
-- 只更新 Surge profile 中被 marker 包住的托管区块。
+- 更新 Surge profile 中被 marker 包住的代理和策略组区块，并确保 sing-box 进程优先直连。
 - 订阅获取、解析、sing-box 检查或 Surge profile 检查失败时，会保留旧的可用配置。
 - 提供 macOS LaunchAgent，用于 sing-box keepalive 和定时同步。
 - 创建 `surge-vless-status`、`surge-vless-sync` 和交互式的 `surge-vless-subscriptions` 命令。
@@ -32,6 +32,7 @@ bash install.sh
 - 询问 Surge profile 路径。
 - 缺少 `[Proxy]` 或 `[Proxy Group]` 时自动创建。
 - 在 Surge profile 中补齐托管 marker。
+- 在 `[Rule]` 最前面补齐 `PROCESS-NAME,sing-box,DIRECT`，防止增强模式把 sing-box 的出站连接再次送回本地 SOCKS 代理，形成回环。
 - 逐行询问 VLESS 节点订阅链接，留空后开始安装。
 - 询问订阅刷新间隔，单位是小时，支持小数。
 - 安装 `surge-vless-sync`、`surge-vless-status` 和 `surge-vless-subscriptions` 快捷命令。zsh、bash、fish 会自动配置；其他 shell 会询问 home 路径和启动配置文件路径后直接写入。
@@ -72,7 +73,7 @@ VLESS 订阅链接通常包含账号凭据。不要把真实的 `subscription_ur
 # END SURGE VLESS BRIDGE GROUP
 ```
 
-工具只会替换 marker 中间的内容，不会改动你手写的其他 Surge 配置。
+代理和策略组只会替换 marker 中间的内容。同步时还会自动创建缺失的 `[Rule]`，并确保 `PROCESS-NAME,sing-box,DIRECT` 位于该节最前面；已有同等直连规则会前移，避免重复，其余规则保持原有顺序。这项保护也适用于 `update.sh` 升级和后续订阅刷新。
 
 ## 节点命名
 

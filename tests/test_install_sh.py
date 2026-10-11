@@ -60,6 +60,9 @@ def test_noninteractive_install_creates_expected_files():
         assert "[Proxy Group]" in profile_text
         assert "Node = socks5, 127.0.0.1, 39000, udp-relay=true" in profile_text
         assert "VLESS = select, Node, Second" in profile_text
+        rules = profile_text.split("[Rule]\n", 1)[1].splitlines()
+        assert rules[0] == "PROCESS-NAME,sing-box,DIRECT"
+        assert profile_text.count("PROCESS-NAME,sing-box,DIRECT") == 1
 
         sync_plist = home / "Library/LaunchAgents/io.github.surge-vless-bridge.sync.plist"
         assert "<integer>1800</integer>" in sync_plist.read_text(encoding="utf-8")

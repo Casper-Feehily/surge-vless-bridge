@@ -9,7 +9,7 @@ The tool keeps Surge as the rule and policy control plane. sing-box handles the 
 - Supports combining multiple raw VLESS subscriptions from any provider.
 - Accepts base64 subscriptions or plain text files/lists containing `vless://` links.
 - Generates one sing-box inbound/outbound pair per node.
-- Updates only marked blocks in a Surge profile.
+- Updates marked proxy and group blocks in a Surge profile and ensures sing-box traffic goes directly.
 - Keeps old working config on fetch, parse, sing-box check, or Surge profile check failure.
 - Provides macOS LaunchAgent templates for sing-box keepalive and scheduled sync.
 - adds `surge-vless-sync`, `surge-vless-status`, and interactive `surge-vless-subscriptions` shortcut commands.
@@ -31,6 +31,7 @@ bash install.sh
 - asks for your Surge profile path
 - creates `[Proxy]` or `[Proxy Group]` sections when missing
 - ensures the managed marker pairs exist in the Surge profile
+- places `PROCESS-NAME,sing-box,DIRECT` first in `[Rule]` to prevent routing loops in Enhanced Mode
 - asks for VLESS subscription URLs one per line, then starts when you submit a blank line
 - asks how often to refresh the subscription, in hours
 - installs the `surge-vless-sync`, `surge-vless-status`, and `surge-vless-subscriptions` shortcut commands. zsh, bash, and fish are configured automatically; other shells ask for the home path and startup file path, then update it directly
@@ -71,7 +72,7 @@ And ensures these markers exist inside `[Proxy Group]`:
 # END SURGE VLESS BRIDGE GROUP
 ```
 
-Only content between those marker pairs is replaced.
+Only proxy and group content between those marker pairs is replaced. Installation, updates, and subscription refreshes also ensure `PROCESS-NAME,sing-box,DIRECT` is the first rule in `[Rule]` (creating the section if needed). This prevents Enhanced Mode from routing sing-box's outbound connections back through the local SOCKS proxy. Existing equivalent direct rules are moved to the front without duplication; other rules retain their order.
 
 ## Node names
 

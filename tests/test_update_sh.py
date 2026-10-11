@@ -19,7 +19,7 @@ def test_update_preserves_config_and_migrates_single_subscription():
         home.mkdir()
         app_dir.mkdir(parents=True)
         sub.write_text("vless://u@example.com:443?security=none&type=tcp#Node", encoding="utf-8")
-        profile.write_text("[Proxy]\n[Proxy Group]\n", encoding="utf-8")
+        profile.write_text("[Proxy]\n[Proxy Group]\n[Rule]\nFINAL,VLESS\n", encoding="utf-8")
         config = {
             "subscription_url": str(sub),
             "surge_profile_path": str(profile),
@@ -50,6 +50,7 @@ def test_update_preserves_config_and_migrates_single_subscription():
         assert (app_dir / "manage_subscriptions.py").exists()
         assert (home / ".local/bin/surge-vless-subscriptions").exists()
         assert (app_dir / "sing-box.generated.json").exists()
+        assert "[Rule]\nPROCESS-NAME,sing-box,DIRECT\nFINAL,VLESS\n" in profile.read_text()
 
 
 if __name__ == "__main__":

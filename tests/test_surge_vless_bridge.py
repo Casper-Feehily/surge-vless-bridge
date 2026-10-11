@@ -160,6 +160,42 @@ def test_sync_creates_missing_surge_sections_and_markers():
         assert bridge.DEFAULT_GROUP_BEGIN in updated
         assert "Node = socks5, 127.0.0.1, 39000, udp-relay=true" in updated
         assert "VLESS = select, Node" in updated
+        assert "[Rule]\nPROCESS-NAME,sing-box,DIRECT\n" in updated
+        assert bridge.sync(cfg_path) == 0
+        assert profile.read_text() == updated
+
+
+def test_sync_prioritizes_existing_loop_protection_and_preserves_other_rules():
+    with tempfile.TemporaryDirectory() as td:
+        root = Path(td)
+        sub = root / "sub.txt"
+        profile = root / "surge.conf"
+        sub.write_text("vless://u@example.com:443?security=none&type=tcp#Node")
+        profile.write_text(
+            "[General]\nloglevel = notify\n[Rule]\n"
+            "# Manual rules\nDOMAIN-SUFFIX,example.com,VLESS\n"
+            "PROCESS-NAME, sing-box, DIRECT\nFINAL,VLESS\n"
+            "[Host]\nlocalhost = 127.0.0.1\n"
+        )
+        cfg_path = root / "config.json"
+        cfg_path.write_text(json.dumps({
+            **BASE_CONFIG,
+            "subscription_url": str(sub),
+            "surge_profile_path": str(profile),
+            "sing_box_config_path": str(root / "sing-box.json"),
+            "sing_box_path": str(root / "missing-sing-box"),
+            "surge_cli_path": str(root / "missing-surge-cli"),
+            "restart_sing_box": False,
+            "reload_surge": False,
+        }))
+        assert bridge.sync(cfg_path, dry_run=True) == 0
+        original = profile.read_text()
+        assert "[Rule]\n# Manual rules" in original
+        assert bridge.sync(cfg_path) == 0
+        updated = profile.read_text()
+        assert "[Rule]\nPROCESS-NAME,sing-box,DIRECT\n# Manual rules\nDOMAIN-SUFFIX,example.com,VLESS\nFINAL,VLESS\n[Host]\nlocalhost = 127.0.0.1\n" in updated
+        assert bridge.sync(cfg_path) == 0
+        assert profile.read_text() == updated
 
 
 def test_sync_accepts_subscription_urls_and_legacy_subscription_url():
